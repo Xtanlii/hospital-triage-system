@@ -1,4 +1,4 @@
-### CHANGES
+<!-- ### CHANGES
 
 
 ## 1. COLOUR CHANGE FROM BLUE TO GREEN
@@ -44,4 +44,12 @@
 New
 Conditional verification for triage inputs if not available: we will deal with when there is a model
 temporary loader in the frontend when getting data
-Remember it is a dynamic queue that updates with new queue data, but we will do it such a way that non-urgent patients and the rest won't have to wait for too long
+Remember it is a dynamic queue that updates with new queue data, but we will do it such a way that non-urgent patients and the rest won't have to wait for too long -->
+
+### CORRECTIONS / OBSERVATIONSgid
+- Arrival datetime input should not be in the frontend when registering new triage. Should be in backend automatically by Date.now
+- For the manually inputing symptoms duration I don't like it cos of maybe invalid input, you can substitute with ranges or values
+-Override reason should not be compulsory
+- View button not working for completed triage assessment logs
+- Wtf is helicopter ? remove it and unknown
+- I don't think we're meant to show patient hospital ID in frontend
