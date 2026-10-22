@@ -1,0 +1,105 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  user_id       String             @id @default(uuid()) @db.Uuid
+  full_name     String             @db.VarChar(100)
+  username      String             @unique @db.VarChar(50)
+  password_hash String             @db.VarChar(255)
+  role          String             @db.VarChar(20) // 'NURSE', 'ADMIN', 'DOCTOR'
+  department    String?            @db.VarChar(100) // 'Emergency', 'Emergency / Critical Care', 'General Medical', 'Outpatient'
+  is_on_duty    Boolean            @default(false)
+  created_at    DateTime           @default(now()) @db.Timestamptz()
+
+  assessments   TriageAssessment[]
+
+  @@index([username])
+  @@index([role])
+  @@index([department])
+  @@map("users")
+}
+
+model Patient {
+  patient_id    String             @id @default(uuid()) @db.Uuid
+  first_name    String             @db.VarChar(100)
+  last_name     String             @db.VarChar(100)
+  date_of_birth DateTime           @db.Date
+  gender        String             @db.VarChar(20)
+  phone_number  String?            @db.VarChar(30)
+  registered_at DateTime           @default(now()) @db.Timestamptz()
+
+  assessments   TriageAssessment[]
+  queueEntries  QueueEntry[]
+
+  @@index([phone_number])
+  @@map("patients")
+}
+
+model TriageAssessment {
+  assessment_id        String            @id @default(uuid()) @db.Uuid
+  patient_id           String            @db.Uuid
+  nurse_id             String            @db.Uuid
+  arrival_transport    String?           @db.VarChar(50)
+  arrival_time         DateTime?         @db.Timestamptz()
+  systolic_bp          Int?
+  diastolic_bp         Int?
+  heart_rate           Int?
+  respiratory_rate     Int?
+  spo2                 Decimal?          @db.Decimal(5, 2)
+  temperature          Decimal?          @db.Decimal(4, 1)
+  pain_score           Int?
+  chief_complaint_code Int?
+  assessed_at          DateTime          @default(now()) @db.Timestamptz()
+
+  patient              Patient           @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+  nurse                User              @relation(fields: [nurse_id], references: [user_id], onDelete: Restrict)
+  prediction           AcuityPrediction?
+
+  @@index([patient_id])
+  @@index([nurse_id])
+  @@index([assessed_at])
+  @@map("triage_assessments")
+}
+
+model AcuityPrediction {
+  prediction_id    String            @id @default(uuid()) @db.Uuid
+  assessment_id    String            @unique @db.Uuid
+  predicted_acuity String            @db.VarChar(20) // 'Immediate', 'Emergent', 'Urgent', 'Less Urgent', 'Non-urgent'
+  acuity_color     String?           @db.VarChar(20) // 'Red', 'Orange', 'Yellow', 'Green', 'Blue'
+  confidence_score Decimal           @db.Decimal(5, 4)
+  model_used       String            @db.VarChar(100)
+  predicted_at     DateTime          @default(now()) @db.Timestamptz()
+
+  assessment       TriageAssessment  @relation(fields: [assessment_id], references: [assessment_id], onDelete: Cascade)
+  queueEntries     QueueEntry[]
+
+  @@index([assessment_id])
+  @@map("acuity_predictions")
+}
+
+model QueueEntry {
+  queue_id       String           @id @default(uuid()) @db.Uuid
+  patient_id     String           @db.Uuid
+  prediction_id  String           @db.Uuid
+  acuity_level   String           @db.VarChar(20) // 'Critical', 'High', 'Moderate', 'Low'
+  department     String           @db.VarChar(100)
+  queue_position Int
+  status         String           @default("Waiting") @db.VarChar(20) // 'Waiting', 'Called', 'In Progress', 'Completed', 'Cancelled'
+  queued_at      DateTime         @default(now()) @db.Timestamptz()
+  attended_at    DateTime?        @db.Timestamptz()
+
+  patient        Patient          @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+  prediction     AcuityPrediction @relation(fields: [prediction_id], references: [prediction_id], onDelete: Cascade)
+
+  @@index([patient_id])
+  @@index([prediction_id])
+  @@index([status])
+  @@index([acuity_level])
+  @@index([queued_at])
+  @@map("queue_entries")
+}

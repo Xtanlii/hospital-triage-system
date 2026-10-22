@@ -1,0 +1,1 @@
+make chief complaint optional, cos a patient may come in unconsious

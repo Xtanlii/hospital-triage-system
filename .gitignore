@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Production builds
+dist/
+client/dist/
+build/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+server/.env
+client/.env
+
+# Agent & IDE scratch directories
+.agents/
+server/.agents/
+server/.claude/
+server/.windsurf/
+.vscode/
+.idea/
+
+# Logs & OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
