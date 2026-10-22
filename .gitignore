@@ -2,6 +2,10 @@
 node_modules/
 client/node_modules/
 server/node_modules/
+model_service/.venv/
+__pycache__/
+*.pyc
+*.zip
 
 # Production builds
 dist/

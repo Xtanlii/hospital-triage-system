@@ -1,4 +1,18 @@
 const triageService = require('../services/triageService');
+const mlService = require('../services/mlService');
+
+async function predictOnly(req, res, next) {
+  try {
+    const prediction = await mlService.predictAcuity(req.body || {});
+    res.status(200).json({
+      success: true,
+      message: 'Triage acuity prediction completed',
+      data: prediction
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 
 async function createTriage(req, res, next) {
   try {
@@ -47,6 +61,7 @@ async function getPatientTriageHistory(req, res, next) {
 }
 
 module.exports = {
+  predictOnly,
   createTriage,
   getAssessment,
   getPatientTriageHistory

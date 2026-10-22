@@ -88,8 +88,8 @@ export const TriagePredictorPage = () => {
         />
         <StatCard
           title="Architecture"
-          value="RF-v2"
-          subtitle="Random Forest Classifier"
+          value="XGBoost"
+          subtitle="SMOTE MIMIC-IV-ED (38 features)"
           icon={Layers}
           variant="default"
         />

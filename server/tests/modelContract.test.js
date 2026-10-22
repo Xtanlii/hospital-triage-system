@@ -364,6 +364,38 @@ describe('ML Contract & Acuity Mapping Test Suite', () => {
       const result = await predictAcuity(testFeatures);
       expect(result.confidence_score).toBe(0.95);
     });
+
+    test('Correctly parses exact Flask model_service response (acuity, triage_label, probabilities, manual_assessment_recommended)', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          acuity: 1,
+          triage_label: 'Red',
+          probabilities: { '1': 0.9213, '2': 0.0714, '3': 0.007, '4': 0.0003, '5': 0.0 },
+          manual_assessment_recommended: true,
+          missing_fields: ['temperature', 'resprate', 'sbp', 'dbp', 'pain'],
+          ignored_out_of_range: []
+        })
+      });
+
+      const result = await predictAcuity({
+        heartrate: 128,
+        o2sat: 89,
+        gender: 'F',
+        arrival_transport: 'AMBULANCE'
+      });
+
+      expect(result.acuity).toBe(1);
+      expect(result.predicted_acuity).toBe('Immediate');
+      expect(result.acuity_color).toBe('Red');
+      expect(result.triage_label).toBe('Red');
+      expect(result.manual_assessment_recommended).toBe(true);
+      expect(result.missing_fields).toEqual(['temperature', 'resprate', 'sbp', 'dbp', 'pain']);
+      expect(result.probabilities['1']).toBe(0.9213);
+      expect(result.confidence_score).toBe(0.9213);
+      expect(result.is_offline_fallback).toBe(false);
+    });
   });
 
   describe('5. Fallback Resilience on Invalid Responses & Failures', () => {

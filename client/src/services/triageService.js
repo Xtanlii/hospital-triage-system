@@ -122,14 +122,10 @@ export const triageService = {
   },
 
   /**
-   * Clinical Rule Decision Support Engine for interactive intake guidance.
-   * Evaluates vitals and symptoms against standard 5-Level ESI triage criteria,
-   * handling nullable and uncollected values safely.
+   * Calls the backend ML prediction service (POST /api/triage/predict -> XGBoost model API)
+   * with automatic client-side fallback when completely offline.
    */
-  runPrediction: async (vitals = {}, chiefComplaint = '', symptoms = '', painLevel = null) => {
-    // Brief processing delay to match clinical UX
-    await new Promise(resolve => setTimeout(resolve, 350));
-
+  runPrediction: async (vitals = {}, chiefComplaint = '', symptoms = '', painLevel = null, context = {}) => {
     const parseNum = (val) => (val !== null && val !== undefined && String(val).trim() !== '' && !isNaN(Number(val))) ? Number(val) : null;
 
     const temp = parseNum(vitals.temperature);
@@ -139,10 +135,70 @@ export const triageService = {
     const pain = parseNum(painLevel);
 
     let sysBP = null;
+    let diaBP = null;
     if (vitals.bloodPressure && String(vitals.bloodPressure).includes('/')) {
-      sysBP = parseNum(vitals.bloodPressure.split('/')[0]);
-    } else if (vitals.systolic_bp !== undefined) {
-      sysBP = parseNum(vitals.systolic_bp);
+      const parts = String(vitals.bloodPressure).split('/');
+      sysBP = parseNum(parts[0]);
+      diaBP = parseNum(parts[1]);
+    } else {
+      sysBP = parseNum(vitals.systolic_bp ?? vitals.sbp);
+      diaBP = parseNum(vitals.diastolic_bp ?? vitals.dbp);
+    }
+
+    const coreVitalsMap = {
+      temperature: temp,
+      heartrate: hr,
+      resprate: rr,
+      o2sat: spo2,
+      sbp: sysBP,
+      dbp: diaBP
+    };
+    const missingFields = Object.entries(coreVitalsMap)
+      .filter(([, v]) => v === null)
+      .map(([k]) => k);
+    if (pain === null) missingFields.push('pain');
+    const usableVitalsCount = 6 - Object.values(coreVitalsMap).filter(v => v === null).length;
+    const manualRecommendedFallback = usableVitalsCount < 3;
+
+    try {
+      const response = await apiClient.post('/triage/predict', {
+        temperature: temp,
+        temperature_unit: 'C',
+        heartrate: hr,
+        resprate: rr,
+        o2sat: spo2,
+        sbp: sysBP,
+        dbp: diaBP,
+        pain,
+        gender: context.gender || 'M',
+        arrival_transport: context.arrival_transport || 'UNKNOWN',
+        arrival_time: context.arrival_time ? new Date(context.arrival_time).toISOString() : new Date().toISOString()
+      });
+
+      const d = response?.data?.data || response?.data;
+      if (d && d.predicted_acuity) {
+        const acuityNum = d.acuity || 3;
+        const triageColor = d.triage_label || d.acuity_color || 'Yellow';
+        return {
+          acuity: acuityNum,
+          prediction: d.predicted_acuity,
+          label: `Level ${acuityNum} — ${d.predicted_acuity} (${triageColor})`,
+          color: triageColor,
+          triage_label: triageColor,
+          probabilities: d.probabilities || null,
+          manual_assessment_recommended: Boolean(d.manual_assessment_recommended),
+          missing_fields: Array.isArray(d.missing_fields) ? d.missing_fields : missingFields,
+          ignored_out_of_range: Array.isArray(d.ignored_out_of_range) ? d.ignored_out_of_range : [],
+          confidence: d.confidence_score ? Math.round(Number(d.confidence_score) * 100) : 85,
+          modelVersion: d.model_used || 'XGBoost (MIMIC-IV-ED)',
+          is_offline_fallback: Boolean(d.is_offline_fallback),
+          rationale: d.rationale || (d.manual_assessment_recommended
+            ? `Fewer than 3 core vital signs were usable (${6 - (d.missing_fields || []).filter(f => f !== 'pain').length}/6 collected). Please assess this patient manually.`
+            : `Predicted Acuity Level ${acuityNum} (${triageColor} — ${d.predicted_acuity}) using ${d.model_used || 'XGBoost Classifier'}.`)
+        };
+      }
+    } catch (err) {
+      console.warn('API /triage/predict unreachable, using client offline rule fallback:', err.message);
     }
 
     const complaintLower = `${chiefComplaint} ${symptoms}`.toLowerCase();
@@ -165,11 +221,18 @@ export const triageService = {
 
     if (hasL1Keywords || hasL1Vitals) {
       return {
+        acuity: 1,
         prediction: 'Immediate',
-        label: 'Level 1 - Immediate',
+        label: 'Level 1 — Immediate (Red)',
         color: 'Red',
+        triage_label: 'Red',
+        probabilities: null,
+        manual_assessment_recommended: manualRecommendedFallback,
+        missing_fields: missingFields,
+        ignored_out_of_range: [],
         confidence: 96,
-        modelVersion: 'v2.5.0-clinical-rf-esi5',
+        modelVersion: 'Clinical ESI Rule Engine (Offline)',
+        is_offline_fallback: true,
         rationale: hasL1Keywords 
           ? `High-risk clinical symptoms detected (${chiefComplaint}). Immediate life support required.`
           : `Critical physiological instability (SpO2: ${spo2 ?? 'N/A'}%, HR: ${hr ?? 'N/A'} bpm, BP: ${sysBP ?? 'N/A'} mmHg).`
@@ -196,11 +259,18 @@ export const triageService = {
 
     if (hasL2Keywords || hasL2Vitals) {
       return {
+        acuity: 2,
         prediction: 'Emergent',
-        label: 'Level 2 - Emergent',
+        label: 'Level 2 — Emergent (Orange)',
         color: 'Orange',
+        triage_label: 'Orange',
+        probabilities: null,
+        manual_assessment_recommended: manualRecommendedFallback,
+        missing_fields: missingFields,
+        ignored_out_of_range: [],
         confidence: 91,
-        modelVersion: 'v2.5.0-clinical-rf-esi5',
+        modelVersion: 'Clinical ESI Rule Engine (Offline)',
+        is_offline_fallback: true,
         rationale: hasL2Keywords
           ? `High-risk presentation (${chiefComplaint}) with potential rapid deterioration.`
           : `Severe physiological or pain distress (Pain: ${pain ?? 'N/A'}/10, HR: ${hr ?? 'N/A'} bpm, SpO2: ${spo2 ?? 'N/A'}%).`
@@ -225,11 +295,18 @@ export const triageService = {
 
     if (hasL3Keywords || hasL3Vitals) {
       return {
+        acuity: 3,
         prediction: 'Urgent',
-        label: 'Level 3 - Urgent',
+        label: 'Level 3 — Urgent (Yellow)',
         color: 'Yellow',
+        triage_label: 'Yellow',
+        probabilities: null,
+        manual_assessment_recommended: manualRecommendedFallback,
+        missing_fields: missingFields,
+        ignored_out_of_range: [],
         confidence: 88,
-        modelVersion: 'v2.5.0-clinical-rf-esi5',
+        modelVersion: 'Clinical ESI Rule Engine (Offline)',
+        is_offline_fallback: true,
         rationale: `Multi-resource clinical intervention required. Hemodynamically stable but urgent investigation indicated.`
       };
     }
@@ -237,22 +314,36 @@ export const triageService = {
     // Level 4: Less Urgent (GREEN)
     if (pain !== null && pain > 0) {
       return {
+        acuity: 4,
         prediction: 'Less Urgent',
-        label: 'Level 4 - Less Urgent',
+        label: 'Level 4 — Less Urgent (Green)',
         color: 'Green',
+        triage_label: 'Green',
+        probabilities: null,
+        manual_assessment_recommended: manualRecommendedFallback,
+        missing_fields: missingFields,
+        ignored_out_of_range: [],
         confidence: 85,
-        modelVersion: 'v2.5.0-clinical-rf-esi5',
+        modelVersion: 'Clinical ESI Rule Engine (Offline)',
+        is_offline_fallback: true,
         rationale: `Physiologically stable requiring single-resource examination or simple treatment.`
       };
     }
 
     // Level 5: Non-Urgent (BLUE)
     return {
+      acuity: 5,
       prediction: 'Non-urgent',
-      label: 'Level 5 - Non-urgent',
+      label: 'Level 5 — Non-urgent (Blue)',
       color: 'Blue',
+      triage_label: 'Blue',
+      probabilities: null,
+      manual_assessment_recommended: manualRecommendedFallback,
+      missing_fields: missingFields,
+      ignored_out_of_range: [],
       confidence: 89,
-      modelVersion: 'v2.5.0-clinical-rf-esi5',
+      modelVersion: 'Clinical ESI Rule Engine (Offline)',
+      is_offline_fallback: true,
       rationale: `Stable outpatient complaint requiring no acute emergency department resources.`
     };
   }

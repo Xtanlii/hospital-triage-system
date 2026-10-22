@@ -182,8 +182,14 @@ async function performTriage(clinicalData, nurseId) {
       assessment,
       prediction: {
         ...prediction,
+        acuity: predictionResult.acuity,
         predicted_acuity: predictionResult.predicted_acuity,
         acuity_color: predictionResult.acuity_color || getAcuityColor(predictionResult.predicted_acuity),
+        triage_label: predictionResult.triage_label || predictionResult.acuity_color || getAcuityColor(predictionResult.predicted_acuity),
+        probabilities: predictionResult.probabilities || null,
+        manual_assessment_recommended: Boolean(predictionResult.manual_assessment_recommended),
+        missing_fields: predictionResult.missing_fields || [],
+        ignored_out_of_range: predictionResult.ignored_out_of_range || [],
         confidence_score: Number(prediction.confidence_score),
         is_offline_fallback: Boolean(predictionResult.is_offline_fallback)
       },

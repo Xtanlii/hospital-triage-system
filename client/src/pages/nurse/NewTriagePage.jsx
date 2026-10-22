@@ -92,7 +92,6 @@ export const NewTriagePage = () => {
   );
 
   // Run AI Triage Prediction
-  // Run AI Triage Prediction
   const handleRunPrediction = async () => {
     if (!chiefComplaint) {
       showToast('Validation Error', 'Please enter a chief complaint before running prediction.', 'warning');
@@ -101,12 +100,28 @@ export const NewTriagePage = () => {
     setIsPredicting(true);
     try {
       const activePain = isPainUnreportable ? null : painLevel;
-      const result = await triageService.runPrediction(vitals, chiefComplaint, symptoms, activePain);
+      const result = await triageService.runPrediction(vitals, chiefComplaint, symptoms, activePain, {
+        gender: selectedPatient?.gender || 'M',
+        arrival_transport: arrivalTransport,
+        arrival_time: arrivalTime
+      });
       setPredictionResult(result);
       setFinalLevel(result.prediction);
       setOverrideReason('');
       setOverrideError('');
-      showToast('AI Prediction Ready', `Model assessed case as ${result.label} (${result.confidence}% confidence).`, 'info');
+      if (result.manual_assessment_recommended) {
+        showToast(
+          'Manual Assessment Recommended',
+          `Model predicted ${result.label}, but fewer than 3 core vitals were usable. Please assess manually.`,
+          'warning'
+        );
+      } else {
+        showToast(
+          'AI Prediction Ready',
+          `Predicted ${result.label} (${result.triage_label || result.color}).`,
+          'info'
+        );
+      }
     } catch (e) {
       showToast('Error', 'Failed to calculate triage prediction.', 'error');
     } finally {

@@ -82,6 +82,46 @@ function formatMLPayload(features) {
   };
 }
 
+const CORE_VITAL_KEYS = ['temperature', 'heartrate', 'resprate', 'o2sat', 'sbp', 'dbp'];
+const ACUITY_TO_NUMBER = {
+  'Immediate': 1,
+  'Emergent': 2,
+  'Urgent': 3,
+  'Less Urgent': 4,
+  'Non-urgent': 5
+};
+
+function computeFallbackDiagnostics(mlPayload) {
+  const missing = CORE_VITAL_KEYS.filter(k => mlPayload[k] === null || mlPayload[k] === undefined);
+  if (mlPayload.pain === null || mlPayload.pain === undefined) {
+    missing.push('pain');
+  }
+  const availableCoreCount = CORE_VITAL_KEYS.length - CORE_VITAL_KEYS.filter(k => mlPayload[k] === null || mlPayload[k] === undefined).length;
+  return {
+    missing_fields: missing,
+    ignored_out_of_range: [],
+    manual_assessment_recommended: availableCoreCount < 3
+  };
+}
+
+function buildFallbackResponse(clinicalFeatures, mlPayload) {
+  const fallbackResult = evaluateClinicalRules(clinicalFeatures);
+  const normalizedAcuity = normalizeAcuity(fallbackResult.predicted_acuity);
+  const acuityColor = getAcuityColor(normalizedAcuity);
+  const acuityNum = ACUITY_TO_NUMBER[normalizedAcuity] || 3;
+  const diagnostics = computeFallbackDiagnostics(mlPayload);
+
+  return {
+    ...fallbackResult,
+    acuity: acuityNum,
+    predicted_acuity: normalizedAcuity,
+    acuity_color: acuityColor,
+    triage_label: acuityColor,
+    probabilities: null,
+    ...diagnostics
+  };
+}
+
 /**
  * Communicates with the ML Inference Service with automatic offline fallback.
  * 
@@ -90,7 +130,7 @@ function formatMLPayload(features) {
  * that critical patient triage and queueing are NEVER interrupted.
  * 
  * @param {Object} clinicalFeatures
- * @returns {Promise<Object>} { predicted_acuity, acuity_color, confidence_score, model_used, is_offline_fallback }
+ * @returns {Promise<Object>} { acuity, predicted_acuity, acuity_color, triage_label, probabilities, manual_assessment_recommended, missing_fields, ignored_out_of_range, confidence_score, model_used, is_offline_fallback }
  */
 async function predictAcuity(clinicalFeatures) {
   const url = `${env.ML_SERVICE_URL}/predict`;
@@ -125,13 +165,7 @@ async function predictAcuity(clinicalFeatures) {
     });
 
     if (env.ENABLE_ML_OFFLINE_FALLBACK !== false) {
-      const fallbackResult = evaluateClinicalRules(clinicalFeatures);
-      const normalizedAcuity = normalizeAcuity(fallbackResult.predicted_acuity);
-      return {
-        ...fallbackResult,
-        predicted_acuity: normalizedAcuity,
-        acuity_color: getAcuityColor(normalizedAcuity)
-      };
+      return buildFallbackResponse(clinicalFeatures, mlPayload);
     }
 
     throw new MLServiceUnavailableError(
@@ -146,13 +180,7 @@ async function predictAcuity(clinicalFeatures) {
     });
 
     if (env.ENABLE_ML_OFFLINE_FALLBACK !== false) {
-      const fallbackResult = evaluateClinicalRules(clinicalFeatures);
-      const normalizedAcuity = normalizeAcuity(fallbackResult.predicted_acuity);
-      return {
-        ...fallbackResult,
-        predicted_acuity: normalizedAcuity,
-        acuity_color: getAcuityColor(normalizedAcuity)
-      };
+      return buildFallbackResponse(clinicalFeatures, mlPayload);
     }
 
     throw new MLServiceUnavailableError(
@@ -169,22 +197,21 @@ async function predictAcuity(clinicalFeatures) {
     });
 
     if (env.ENABLE_ML_OFFLINE_FALLBACK !== false) {
-      const fallbackResult = evaluateClinicalRules(clinicalFeatures);
-      const normalizedAcuity = normalizeAcuity(fallbackResult.predicted_acuity);
-      return {
-        ...fallbackResult,
-        predicted_acuity: normalizedAcuity,
-        acuity_color: getAcuityColor(normalizedAcuity)
-      };
+      return buildFallbackResponse(clinicalFeatures, mlPayload);
     }
 
     throw new MLServiceUnavailableError('ML Inference Service returned invalid JSON response');
   }
 
-  // Parse response: supports raw integer (1..5), { prediction: 1..5 }, { predicted_acuity: 1..5 }, [1..5]
+  // Parse response: supports { acuity: 1..5, triage_label, probabilities, manual_assessment_recommended, ... }, raw integer (1..5), { prediction: 1..5 }, { predicted_acuity: 1..5 }, [1..5]
   let rawAcuity = null;
   let rawConfidence = undefined;
   let modelUsed = null;
+  let probabilities = null;
+  let manualAssessmentRecommended = undefined;
+  let missingFields = undefined;
+  let ignoredOutOfRange = undefined;
+  let triageLabel = undefined;
 
   if (typeof data === 'number' || typeof data === 'string') {
     rawAcuity = data;
@@ -194,6 +221,11 @@ async function predictAcuity(clinicalFeatures) {
     rawAcuity = data.predicted_acuity ?? data.prediction ?? data.acuity ?? data.level;
     rawConfidence = data.confidence_score ?? data.confidence;
     modelUsed = data.model_used ?? data.model;
+    probabilities = data.probabilities || null;
+    manualAssessmentRecommended = data.manual_assessment_recommended;
+    missingFields = data.missing_fields;
+    ignoredOutOfRange = data.ignored_out_of_range;
+    triageLabel = data.triage_label;
   }
 
   if (!rawAcuity || !isValidAcuity(rawAcuity)) {
@@ -202,13 +234,7 @@ async function predictAcuity(clinicalFeatures) {
     });
 
     if (env.ENABLE_ML_OFFLINE_FALLBACK !== false) {
-      const fallbackResult = evaluateClinicalRules(clinicalFeatures);
-      const normalizedAcuity = normalizeAcuity(fallbackResult.predicted_acuity);
-      return {
-        ...fallbackResult,
-        predicted_acuity: normalizedAcuity,
-        acuity_color: getAcuityColor(normalizedAcuity)
-      };
+      return buildFallbackResponse(clinicalFeatures, mlPayload);
     }
 
     throw new MLServiceUnavailableError(
@@ -216,21 +242,37 @@ async function predictAcuity(clinicalFeatures) {
     );
   }
 
-  // Default confidence to 0.85 if omitted by integer model output
+  const normalizedAcuity = normalizeAcuity(rawAcuity);
+  const acuityColor = triageLabel || getAcuityColor(normalizedAcuity);
+  const acuityNum = ACUITY_TO_NUMBER[normalizedAcuity] || Number(rawAcuity) || 3;
+
+  // Derive confidence from explicit confidence_score or the predicted class probability
   let confidence = 0.85;
   if (rawConfidence !== undefined && rawConfidence !== null) {
     const parsedConf = Number(rawConfidence);
     if (!isNaN(parsedConf)) {
       confidence = parsedConf > 1 && parsedConf <= 100 ? parsedConf / 100 : parsedConf;
     }
+  } else if (probabilities && typeof probabilities === 'object' && probabilities[String(acuityNum)] !== undefined) {
+    const probVal = Number(probabilities[String(acuityNum)]);
+    if (!isNaN(probVal)) {
+      confidence = probVal;
+    }
   }
 
-  const normalizedAcuity = normalizeAcuity(rawAcuity);
-  const acuityColor = getAcuityColor(normalizedAcuity);
+  const fallbackDiag = computeFallbackDiagnostics(mlPayload);
 
   const result = {
+    acuity: acuityNum,
     predicted_acuity: normalizedAcuity,
-    acuity_color: acuityColor,
+    acuity_color: getAcuityColor(normalizedAcuity),
+    triage_label: acuityColor,
+    probabilities,
+    manual_assessment_recommended: manualAssessmentRecommended !== undefined
+      ? Boolean(manualAssessmentRecommended)
+      : fallbackDiag.manual_assessment_recommended,
+    missing_fields: Array.isArray(missingFields) ? missingFields : fallbackDiag.missing_fields,
+    ignored_out_of_range: Array.isArray(ignoredOutOfRange) ? ignoredOutOfRange : fallbackDiag.ignored_out_of_range,
     confidence_score: confidence,
     model_used: (modelUsed && typeof modelUsed === 'string' && modelUsed.trim()) 
       ? modelUsed.trim() 

@@ -9,6 +9,9 @@ const { validateTriageInput } = require('../validators/triageValidators');
 // Base path: /api/triage
 router.use(authenticateToken);
 
+// Live ML model prediction endpoint (before final triage submission)
+router.post('/predict', requireRole('NURSE', 'ADMIN'), triageController.predictOnly);
+
 // Primary triage assessment endpoint
 router.post('/', requireRole('NURSE', 'ADMIN'), validateRequest(validateTriageInput), triageController.createTriage);
 router.get('/:assessmentId', triageController.getAssessment);
