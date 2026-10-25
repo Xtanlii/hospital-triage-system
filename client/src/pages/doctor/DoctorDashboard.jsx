@@ -22,6 +22,7 @@ import { SearchBar } from '../../components/common/SearchBar';
 import { PatientDetailModal } from '../../components/doctor/PatientDetailModal';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const DoctorDashboard = () => {
   const navigate = useNavigate();
@@ -179,7 +180,7 @@ export const DoctorDashboard = () => {
         >
           <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
             <span>Average Hospital Wait:</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200">{stats.averageWaitTime} mins</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{formatWaitTime(stats.averageWaitTime)}</span>
           </div>
         </StatCard>
       </div>
@@ -260,7 +261,7 @@ export const DoctorDashboard = () => {
                         <TriageBadge level={item.triageLevel} size="md" pulse={isLevel1} />
                       </td>
                       <td className="py-4 px-5 font-mono text-slate-700 dark:text-slate-300 font-semibold">
-                        {item.waitingMinutes} min
+                        {formatWaitTime(item.waitingMinutes)}
                       </td>
                       <td className="py-4 px-5 font-medium text-slate-700 dark:text-slate-300">
                         {item.departmentName}

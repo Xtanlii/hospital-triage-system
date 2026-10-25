@@ -7,7 +7,7 @@ export const DEFAULT_DEPARTMENTS = [
     code: 'ER',
     capacity: 35,
     currentQueueLength: 0,
-    averageWaitTime: 14,
+    averageWaitTime: 8,
     status: 'Active',
     description: 'Immediate resuscitation, acute trauma care, and life-threatening medical stabilization.'
   },
@@ -17,7 +17,7 @@ export const DEFAULT_DEPARTMENTS = [
     code: 'ECC',
     capacity: 20,
     currentQueueLength: 0,
-    averageWaitTime: 20,
+    averageWaitTime: 12,
     status: 'Active',
     description: 'High acuity resuscitation, continuous hemodynamic monitoring, and emergent intensive care.'
   },
@@ -27,7 +27,7 @@ export const DEFAULT_DEPARTMENTS = [
     code: 'MED',
     capacity: 50,
     currentQueueLength: 0,
-    averageWaitTime: 28,
+    averageWaitTime: 19,
     status: 'Active',
     description: 'Inpatient and medical admissions, urgent multi-resource adult medical care and diagnostics.'
   },
@@ -37,7 +37,7 @@ export const DEFAULT_DEPARTMENTS = [
     code: 'OPD',
     capacity: 60,
     currentQueueLength: 0,
-    averageWaitTime: 32,
+    averageWaitTime: 24,
     status: 'Active',
     description: 'Non-urgent ambulatory care, primary reviews, minor wound treatment, and general consultations.'
   }

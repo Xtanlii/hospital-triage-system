@@ -8,7 +8,7 @@ const DEPARTMENT_METADATA = [
     name: 'Emergency',
     code: 'ER',
     capacity: 35,
-    averageWaitTime: 14,
+    averageWaitTime: 8,
     status: 'Active',
     description: 'Immediate resuscitation, acute trauma care, and life-threatening medical stabilization.'
   },
@@ -17,7 +17,7 @@ const DEPARTMENT_METADATA = [
     name: 'Emergency / Critical Care',
     code: 'ECC',
     capacity: 20,
-    averageWaitTime: 20,
+    averageWaitTime: 12,
     status: 'Active',
     description: 'High acuity resuscitation, continuous hemodynamic monitoring, and emergent intensive care.'
   },
@@ -26,7 +26,7 @@ const DEPARTMENT_METADATA = [
     name: 'General Medical',
     code: 'MED',
     capacity: 50,
-    averageWaitTime: 28,
+    averageWaitTime: 19,
     status: 'Active',
     description: 'Inpatient and medical admissions, urgent multi-resource adult medical care and diagnostics.'
   },
@@ -35,7 +35,7 @@ const DEPARTMENT_METADATA = [
     name: 'Outpatient',
     code: 'OPD',
     capacity: 60,
-    averageWaitTime: 32,
+    averageWaitTime: 24,
     status: 'Active',
     description: 'Non-urgent ambulatory care, primary reviews, minor wound treatment, and general consultations.'
   }

@@ -23,6 +23,7 @@ import { Modal } from '../../components/common/Modal';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { triageService } from '../../services/triageService';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const NewTriagePage = () => {
   const navigate = useNavigate();
@@ -670,7 +671,7 @@ export const NewTriagePage = () => {
               onChange={(e) => setAssignedDeptId(e.target.value)}
               options={departments.map(d => ({
                 value: d.id,
-                label: `${d.name} (${d.code}) · ${d.currentQueueLength} in queue (Avg ${d.averageWaitTime}m)`
+                label: `${d.name} (${d.code}) · ${d.currentQueueLength} in queue (Avg ${formatWaitTime(d.averageWaitTime)})`
               }))}
             />
 

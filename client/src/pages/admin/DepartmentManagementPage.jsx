@@ -4,6 +4,7 @@ import { AddEditDepartmentModal } from '../../components/admin/AddEditDepartment
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { SearchBar } from '../../components/common/SearchBar';
 import { Building2, Plus, Edit2, Trash2, Power, Users, Clock } from 'lucide-react';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const DepartmentManagementPage = () => {
   const { departments, addDepartment, updateDepartment, deleteDepartment } = useApp();
@@ -119,7 +120,7 @@ export const DepartmentManagementPage = () => {
                       {dept.availableStaff} clinicians
                     </td>
                     <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
-                      {dept.averageWaitTime} min
+                      {formatWaitTime(dept.averageWaitTime)}
                     </td>
                     <td className="py-3.5 px-4">
                       <button

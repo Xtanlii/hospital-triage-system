@@ -15,6 +15,7 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { SearchBar } from '../../components/common/SearchBar';
 import { useApp } from '../../context/AppContext';
 import { PatientDetailModal } from '../../components/doctor/PatientDetailModal';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const NurseDashboard = () => {
   const navigate = useNavigate();
@@ -124,7 +125,7 @@ export const NurseDashboard = () => {
 
         <StatCard
           title="Average Waiting Time"
-          value={`${stats.averageWaitTime}m`}
+          value={formatWaitTime(stats.averageWaitTime)}
           subtitle="Target threshold < 30 minutes"
           icon={Clock}
           variant="default"
@@ -255,7 +256,7 @@ export const NurseDashboard = () => {
                         <TriageBadge level={item.triageLevel} size="md" pulse={isLevel1} />
                       </td>
                       <td className="py-4 px-5 font-mono text-slate-700 dark:text-slate-300 font-semibold">
-                        {item.waitingMinutes} min
+                        {formatWaitTime(item.waitingMinutes)}
                       </td>
                       <td className="py-4 px-5 font-medium text-slate-700 dark:text-slate-300">
                         {item.departmentName}

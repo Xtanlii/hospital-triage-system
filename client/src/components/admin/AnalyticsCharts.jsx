@@ -15,6 +15,7 @@ import {
   Area
 } from 'recharts';
 import { useTheme } from '../../context/ThemeContext';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const TriageDistributionDonut = ({ data }) => {
   const { isDarkMode } = useTheme();
@@ -91,7 +92,7 @@ export const DepartmentWaitBarChart = ({ data }) => {
             unit="m"
           />
           <RechartsTooltip 
-            formatter={(val, name, item) => [`${val} mins (${item.payload.queue} in queue)`, item.payload.fullName]}
+            formatter={(val, name, item) => [`${formatWaitTime(val)} (${item.payload.queue} in queue)`, item.payload.fullName]}
             contentStyle={tooltipStyle}
             itemStyle={{ color: isDarkMode ? '#f1f5f9' : '#0f172a' }}
           />

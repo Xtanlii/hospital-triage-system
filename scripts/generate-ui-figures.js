@@ -31,8 +31,8 @@ const htmlCards = {
       <div class="sheet">
         <div class="hdr">
           <div>
-            <h3 class="p-name">Arthur Dent (PID: PT-10492)</h3>
-            <div class="p-sub">Gender: Male • Age: 42 • Transport: AMBULANCE • Arrival: 14:15 Today</div>
+            <h3 class="p-name">Chukwudi Okafor (PID: PT-10492)</h3>
+            <div class="p-sub">Gender: Male • Age: 44 • Transport: AMBULANCE • Wait Time: 4 mins</div>
           </div>
           <span class="badge-red">ESI Level 1 — Resuscitation (Red)</span>
         </div>
@@ -75,7 +75,7 @@ const htmlCards = {
       <div class="form-card">
         <div class="title">Figure 4.10: Completed Patient Intake & Vitals Data Entry</div>
         <div class="row">
-          <div class="field"><label>Patient Full Name</label><input type="text" value="Arthur Dent" readonly></div>
+          <div class="field"><label>Patient Full Name</label><input type="text" value="Chukwudi Okafor" readonly></div>
           <div class="field"><label>Arrival Mode</label><select><option>AMBULANCE (Emergency)</option></select></div>
         </div>
         <div class="row">

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const PatientDetailModal = ({
   isOpen,
@@ -157,7 +158,7 @@ export const PatientDetailModal = ({
               <span className="font-semibold">Assessing Nurse:</span> {assessment?.nurseName || 'Nurse Amina Bello'}
             </div>
             <div className="text-slate-500 dark:text-slate-400">
-              <span className="font-semibold">Checked In:</span> {queueEntry?.waitingMinutes ? `${queueEntry.waitingMinutes} mins ago` : 'Recent'}
+              <span className="font-semibold">Checked In:</span> {queueEntry?.waitingMinutes !== undefined ? `${formatWaitTime(queueEntry.waitingMinutes)} ago` : 'Recent'}
             </div>
           </div>
         </div>

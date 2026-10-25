@@ -4,6 +4,7 @@ import { TriageBadge } from "../../components/common/TriageBadge";
 import { SearchBar } from "../../components/common/SearchBar";
 import { PatientDetailModal } from "../../components/doctor/PatientDetailModal";
 import { CheckCircle2, Eye } from "lucide-react";
+import { formatWaitTime } from "../../utils/formatWaitTime";
 
 export const DoctorCompletedPage = () => {
   const { queue, patients, assessments } = useApp();
@@ -118,7 +119,7 @@ export const DoctorCompletedPage = () => {
                     </td>
 
                     <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
-                      {item.waitingMinutes} min
+                      {formatWaitTime(item.waitingMinutes)}
                     </td>
 
                     <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 font-medium">

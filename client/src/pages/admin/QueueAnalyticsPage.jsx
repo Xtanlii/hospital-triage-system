@@ -8,6 +8,7 @@ import { analyticsService } from '../../services/analyticsService';
 import { useApp } from '../../context/AppContext';
 import { Activity, Clock, TrendingUp, Users } from 'lucide-react';
 import { StatCard } from '../../components/common/StatCard';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const QueueAnalyticsPage = () => {
   const { assessments, departments, stats } = useApp();
@@ -32,7 +33,7 @@ export const QueueAnalyticsPage = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           title="Average Wait"
-          value={`${stats.averageWaitTime} mins`}
+          value={formatWaitTime(stats.averageWaitTime)}
           subtitle="Hospital-wide median"
           icon={Clock}
           variant="primary"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Building2, Users, Clock, Bed, CheckCircle2 } from 'lucide-react';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const NurseDepartmentsPage = () => {
   const { departments } = useApp();
@@ -79,7 +80,7 @@ export const NurseDepartmentsPage = () => {
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700/60">
                   <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold">Average Wait</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{dept.averageWaitTime} mins</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{formatWaitTime(dept.averageWaitTime)}</span>
                 </div>
               </div>
             </div>

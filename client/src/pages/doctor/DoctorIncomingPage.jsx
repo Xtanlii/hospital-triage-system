@@ -19,6 +19,7 @@ import { SearchBar } from '../../components/common/SearchBar';
 import { PatientDetailModal } from '../../components/doctor/PatientDetailModal';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const DoctorIncomingPage = () => {
   const { 
@@ -213,7 +214,7 @@ export const DoctorIncomingPage = () => {
                         <TriageBadge level={item.triageLevel} size="sm" pulse={isLevel1} />
                       </td>
                       <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300 font-semibold">
-                        {item.waitingMinutes} min
+                        {formatWaitTime(item.waitingMinutes)}
                       </td>
                       <td className="py-3.5 px-4 font-medium text-slate-800 dark:text-slate-200">
                         {item.departmentName}

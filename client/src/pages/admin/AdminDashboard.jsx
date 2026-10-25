@@ -18,6 +18,7 @@ import {
 } from '../../components/admin/AnalyticsCharts';
 import { analyticsService } from '../../services/analyticsService';
 import { useApp } from '../../context/AppContext';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ export const AdminDashboard = () => {
         />
         <StatCard
           title="Hospital Avg Wait"
-          value={`${stats.averageWaitTime}m`}
+          value={formatWaitTime(stats.averageWaitTime)}
           subtitle="Target threshold &lt; 30 min"
           icon={TrendingUp}
           variant={stats.averageWaitTime > 30 ? 'amber' : 'green'}

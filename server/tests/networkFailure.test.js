@@ -30,7 +30,7 @@ describe('Network Failure Mechanisms & Offline Fallback Tests', () => {
 
     // Get a patient for triage
     const patient = await prisma.patient.findFirst({
-      where: { first_name: 'Arthur' }
+      where: { first_name: 'Chukwudi' }
     });
     testPatientId = patient.patient_id;
   });

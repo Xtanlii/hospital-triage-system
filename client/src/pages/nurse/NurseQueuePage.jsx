@@ -16,6 +16,7 @@ import { SearchBar } from '../../components/common/SearchBar';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { PatientDetailModal } from '../../components/doctor/PatientDetailModal';
+import { formatWaitTime } from '../../utils/formatWaitTime';
 
 export const NurseQueuePage = () => {
   const { queue, departments, patients, assessments, callPatient, updateQueueStatus } = useApp();
@@ -190,7 +191,7 @@ export const NurseQueuePage = () => {
                         <TriageBadge level={item.triageLevel} size="sm" pulse={isLevel1 && item.status !== 'Completed'} />
                       </td>
                       <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300 font-semibold">
-                        {item.waitingMinutes} min
+                        {formatWaitTime(item.waitingMinutes)}
                       </td>
                       <td className="py-3.5 px-4 font-medium text-slate-800 dark:text-slate-200">
                         {item.departmentName}
