@@ -11,19 +11,19 @@ export const StatCard = ({
   children = null
 }) => {
   const variantStyles = {
-    default: 'bg-white border-slate-200/90 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100',
-    primary: 'bg-clinical-50/50 border-clinical-200/80 text-clinical-950 dark:bg-clinical-950/30 dark:border-clinical-800/60 dark:text-clinical-100',
-    red: 'bg-rose-50/60 border-rose-200 text-rose-950 dark:bg-rose-950/30 dark:border-rose-800/60 dark:text-rose-100',
-    amber: 'bg-amber-50/60 border-amber-200 text-amber-950 dark:bg-amber-950/30 dark:border-amber-800/60 dark:text-amber-100',
-    green: 'bg-emerald-50/60 border-emerald-200 text-emerald-950 dark:bg-emerald-950/30 dark:border-emerald-800/60 dark:text-emerald-100',
+    default: 'bg-white border-slate-200/90 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100 dark:hover:border-slate-700',
+    primary: 'bg-clinical-50/50 border-clinical-200/80 text-clinical-950 dark:bg-gradient-to-br dark:from-emerald-950/40 dark:to-slate-900 dark:border-emerald-500/30 dark:text-emerald-100 dark:shadow-[0_0_20px_rgba(16,185,129,0.08)]',
+    red: 'bg-rose-50/60 border-rose-200 text-rose-950 dark:bg-rose-950/20 dark:border-rose-900/40 dark:text-rose-100',
+    amber: 'bg-amber-50/60 border-amber-200 text-amber-950 dark:bg-amber-950/20 dark:border-amber-900/40 dark:text-amber-100',
+    green: 'bg-emerald-50/60 border-emerald-200 text-emerald-950 dark:bg-gradient-to-br dark:from-emerald-950/40 dark:to-slate-900 dark:border-emerald-500/30 dark:text-emerald-100 dark:shadow-[0_0_20px_rgba(16,185,129,0.08)]',
   };
 
   const iconStyles = {
-    default: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-    primary: 'bg-clinical-100 text-clinical-700 dark:bg-clinical-900/60 dark:text-clinical-300',
-    red: 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300',
-    amber: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300',
-    green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
+    default: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-emerald-300 dark:border dark:border-emerald-500/20',
+    primary: 'bg-clinical-100 text-clinical-700 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border dark:border-emerald-500/30 dark:shadow-[0_0_12px_rgba(16,185,129,0.3)]',
+    red: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 dark:border dark:border-rose-800/40',
+    amber: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 dark:border dark:border-amber-800/40',
+    green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border dark:border-emerald-500/30 dark:shadow-[0_0_12px_rgba(16,185,129,0.3)]',
   };
 
   return (

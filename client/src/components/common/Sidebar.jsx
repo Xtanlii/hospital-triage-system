@@ -71,7 +71,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
         {/* Hospital Branding Header */}
         <div className={`relative flex h-16 shrink-0 items-center border-b border-slate-200 dark:border-slate-800 ${isCollapsed ? 'justify-center px-0' : 'justify-between px-5'}`}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-clinical-600 flex items-center justify-center text-white shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-clinical-600 dark:bg-gradient-to-br dark:from-emerald-500 dark:to-emerald-700 flex items-center justify-center text-white shadow-xs dark:shadow-[0_0_15px_rgba(16,185,129,0.35)]">
               <HeartPulse size={22} className="stroke-[2.2]" />
             </div>
             {!isCollapsed && (
@@ -79,7 +79,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
                 <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
                   ApexCare
                 </h1>
-                <p className="text-[10px] uppercase font-bold tracking-wider text-clinical-600 dark:text-clinical-400">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-clinical-600 dark:text-emerald-400">
                   Triage & Queue MS
                 </p>
               </div>
@@ -112,9 +112,9 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
         </div>
 
         {/* Current Active User Profile Banner in Sidebar */}
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/40">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/70">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-clinical-100 text-clinical-800 dark:bg-clinical-950 dark:text-clinical-300 border border-clinical-200 dark:border-clinical-800 flex items-center justify-center font-bold text-sm">
+            <div className="w-10 h-10 rounded-full bg-clinical-100 text-clinical-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-clinical-200 dark:border-emerald-800/60 flex items-center justify-center font-bold text-sm shadow-xs dark:shadow-[0_0_10px_rgba(16,185,129,0.15)]">
               {currentUser?.avatar ? (
                 <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full rounded-full object-cover" />
               ) : (
@@ -127,7 +127,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
                   {currentUser?.name || 'Staff User'}
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-clinical-600 text-white">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-clinical-600 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border dark:border-emerald-500/30 text-white">
                     <Shield size={10} />
                     {role}
                   </span>
@@ -155,10 +155,10 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
               onClick={() => onClose && onClose()}
               className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                 isActive 
-                  ? 'bg-clinical-600 text-white shadow-xs font-bold' 
+                  ? 'bg-clinical-600 text-white shadow-xs font-bold dark:bg-gradient-to-r dark:from-emerald-500/25 dark:to-emerald-500/10 dark:text-emerald-300 dark:border dark:border-emerald-500/40 dark:shadow-[0_0_15px_rgba(16,185,129,0.18)]' 
                   : item.highlight
-                    ? 'text-clinical-700 bg-clinical-50 hover:bg-clinical-100 dark:bg-clinical-950/40 dark:text-clinical-300 dark:hover:bg-clinical-950/70 font-bold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'text-clinical-700 bg-clinical-50 hover:bg-clinical-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border dark:border-emerald-800/40 dark:hover:bg-emerald-950/70 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-emerald-200 dark:hover:bg-slate-800/60'
               }`}
             >
               <item.icon size={17} className="shrink-0" />

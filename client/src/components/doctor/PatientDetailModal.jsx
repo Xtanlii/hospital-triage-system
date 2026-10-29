@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  Modal 
-} from '../common/Modal';
+import { Modal } from '../common/Modal';
 import { TriageBadge } from '../common/TriageBadge';
 import { StatusBadge } from '../common/StatusBadge';
+import { SelectInput } from '../common/SelectInput';
 import { 
   Heart, 
   Thermometer, 
@@ -37,16 +36,25 @@ export const PatientDetailModal = ({
   const { currentUser } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState(queueEntry?.status || 'Waiting');
 
-  if (!queueEntry && !patient) return null;
+  if (!queueEntry && !patient && !assessment) return null;
+
+  const currentPatient = patient || assessment?.patient || {
+    name: assessment?.patientName || queueEntry?.patientName || 'Patient',
+    age: assessment?.patientAge || queueEntry?.patientAge || 35,
+    gender: assessment?.patientGender || queueEntry?.patientGender || 'Unknown',
+    id: assessment?.patientId || queueEntry?.patientId
+  };
 
   const vitals = assessment?.vitals || {
-    temperature: '37.0',
-    bloodPressure: '120/80',
-    heartRate: '75',
-    respiratoryRate: '16',
-    oxygenSaturation: '98',
-    weight: '70',
-    height: '175'
+    temperature: assessment?.temperature || '37.0',
+    bloodPressure: (assessment?.systolic_bp && assessment?.diastolic_bp) 
+      ? `${assessment.systolic_bp}/${assessment.diastolic_bp}` 
+      : (assessment?.bloodPressure || '120/80'),
+    heartRate: assessment?.heart_rate || assessment?.heartRate || '75',
+    respiratoryRate: assessment?.respiratory_rate || assessment?.respiratoryRate || '16',
+    oxygenSaturation: assessment?.spo2 || assessment?.oxygenSaturation || '98',
+    weight: assessment?.weight || '70',
+    height: assessment?.height || '175'
   };
 
   const handleCall = () => {
@@ -81,7 +89,7 @@ export const PatientDetailModal = ({
       onClose={onClose}
       title={
         <div className="flex items-center gap-2">
-          <span>Clinical Patient Encounter: {patient?.name || queueEntry?.patientName}</span>
+          <span>Clinical Patient Encounter: {currentPatient?.name || patient?.name || queueEntry?.patientName}</span>
           {queueEntry?.queueNumber && (
             <span className="text-xs px-2 py-0.5 rounded bg-clinical-100 text-clinical-800 font-mono font-bold">
               #{queueEntry.queueNumber}
@@ -89,32 +97,39 @@ export const PatientDetailModal = ({
           )}
         </div>
       }
-      subtitle={`Hospital ID: ${patient?.hospitalId || 'HOSP-2026-N/A'} • Department: ${queueEntry?.departmentName || 'Outpatient'}`}
+      subtitle={`Department: ${queueEntry?.departmentName || assessment?.department || 'Outpatient'} • Urgency: ${assessment?.finalTriageLevel || queueEntry?.triageLevel || 'Urgent'}`}
       maxWidth="max-w-4xl"
       footer={
         <div className="flex flex-wrap items-center justify-between w-full gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Update Queue Status:</span>
-            <select
-              value={queueEntry?.status || selectedStatus}
-              onChange={handleStatusChange}
-              className="text-xs border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-slate-800 font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-clinical-500"
-            >
-              <option value="Waiting">Waiting</option>
-              <option value="Called">Called</option>
-              <option value="In Consultation">In Consultation</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
+          {queueEntry ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Update Queue Status:</span>
+              <SelectInput
+                value={queueEntry?.status || selectedStatus}
+                onChange={handleStatusChange}
+                className="w-40"
+                options={[
+                  { value: 'Waiting', label: 'Waiting' },
+                  { value: 'Called', label: 'Called' },
+                  { value: 'In Consultation', label: 'In Consultation' },
+                  { value: 'Completed', label: 'Completed' },
+                  { value: 'Cancelled', label: 'Cancelled' }
+                ]}
+              />
+            </div>
+          ) : (
+            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">
+              Completed Triage Assessment Record
+            </span>
+          )}
 
           <div className="flex items-center gap-2">
-            {queueEntry?.status !== 'Completed' && (
+            {queueEntry && queueEntry?.status !== 'Completed' && (
               <>
                 <button
                   type="button"
                   onClick={handleCall}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
                 >
                   <BellRing size={13} />
                   <span>Call Patient</span>
@@ -298,7 +313,7 @@ export const PatientDetailModal = ({
         </div>
 
         {/* Demographics & Medical History */}
-        {patient && (
+        {currentPatient && (
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 bg-white dark:bg-slate-900 space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <User size={15} className="text-clinical-600" />
@@ -307,19 +322,19 @@ export const PatientDetailModal = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px]">Age & Gender</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{patient.age} yrs • {patient.gender}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{currentPatient.age || 35} yrs • {currentPatient.gender || 'Unknown'}</span>
               </div>
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px]">Blood / Genotype</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{patient.bloodGroup || 'O+'} / {patient.genotype || 'AA'}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{currentPatient.bloodGroup || 'O+'} / {currentPatient.genotype || 'AA'}</span>
               </div>
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px]">Phone Contact</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{patient.phone}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{currentPatient.phone || 'N/A'}</span>
               </div>
               <div>
                 <span className="text-slate-400 dark:text-slate-500 font-medium block text-[11px]">Last Hospital Visit</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{patient.lastVisit || 'First visit'}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{currentPatient.lastVisit || 'First visit'}</span>
               </div>
             </div>
 
@@ -327,19 +342,19 @@ export const PatientDetailModal = ({
               <div>
                 <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 block">Existing Conditions</span>
                 <p className="text-slate-700 dark:text-slate-300 font-medium mt-0.5">
-                  {patient.existingConditions?.join(', ') || 'None recorded'}
+                  {currentPatient.existingConditions?.join?.(', ') || currentPatient.existingConditions || 'None recorded'}
                 </p>
               </div>
               <div>
                 <span className="text-[11px] font-bold text-rose-500 block">Documented Allergies</span>
                 <p className="text-rose-700 dark:text-rose-400 font-bold mt-0.5">
-                  {patient.allergies?.join(', ') || 'None known'}
+                  {currentPatient.allergies?.join?.(', ') || currentPatient.allergies || 'None known'}
                 </p>
               </div>
               <div>
                 <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 block">Current Medications</span>
                 <p className="text-slate-700 dark:text-slate-300 font-medium mt-0.5">
-                  {patient.currentMedications?.join(', ') || 'None'}
+                  {currentPatient.currentMedications?.join?.(', ') || currentPatient.currentMedications || 'None'}
                 </p>
               </div>
             </div>

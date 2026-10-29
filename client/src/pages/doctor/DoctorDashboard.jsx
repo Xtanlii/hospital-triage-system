@@ -148,7 +148,7 @@ export const DoctorDashboard = () => {
             <span className="px-2 py-0.5 rounded-md bg-amber-500 text-white">
               {stats.level3Count ?? stats.amberCount} L3
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white">
+            <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white">
               {stats.level4Count ?? 0} L4
             </span>
             <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white">
@@ -274,7 +274,7 @@ export const DoctorDashboard = () => {
                           {item.status === 'Waiting' && (
                             <button
                               onClick={() => callPatient(item.id, currentUser?.name)}
-                              className="px-3 py-1.5 text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                              className="px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                             >
                               <BellRing size={12} />
                               <span>Call</span>

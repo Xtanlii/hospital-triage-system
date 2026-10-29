@@ -50,11 +50,11 @@ export default {
           },
           // Level 4: Less Urgent (Green)
           level4: {
-            bg: '#f0fdf4',
-            text: '#166534',
-            border: '#4ade80',
-            solid: '#16a34a',
-            hover: '#15803d'
+            bg: '#eff6ff',
+            text: '#1e40af',
+            border: '#60a5fa',
+            solid: '#2563eb',
+            hover: '#1d4ed8'
           },
           // Level 5: Non-urgent (Blue)
           level5: {

@@ -25,11 +25,22 @@ export const DoctorCompletedPage = () => {
   });
 
   const matchedPatient = selectedEntry
-    ? patients.find((p) => p.id === selectedEntry.patientId)
+    ? (patients.find((p) => p.id === selectedEntry.patientId) || selectedEntry.patient || {
+        name: selectedEntry.patientName,
+        age: selectedEntry.patientAge || 35,
+        gender: selectedEntry.patientGender || 'Unknown',
+        id: selectedEntry.patientId
+      })
     : null;
 
   const matchedAssessment = selectedEntry
-    ? assessments.find((a) => a.id === selectedEntry.assessmentId)
+    ? (assessments.find((a) => a.id === selectedEntry.assessmentId) || selectedEntry.assessment || {
+        chiefComplaint: selectedEntry.chiefComplaint,
+        finalTriageLevel: selectedEntry.triageLevel,
+        predictedLevel: selectedEntry.triageLevel,
+        department: selectedEntry.departmentName,
+        nurseName: selectedEntry.nurseName
+      })
     : null;
 
   return (

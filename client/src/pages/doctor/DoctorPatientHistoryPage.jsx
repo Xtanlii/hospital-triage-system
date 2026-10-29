@@ -49,7 +49,7 @@ export const DoctorPatientHistoryPage = () => {
           value={searchQuery}
           onChange={setSearchQuery}
           onClear={() => setSearchQuery('')}
-          placeholder="Search by patient full name, hospital ID, or phone number..."
+          placeholder="Search by patient full name or phone number..."
         />
       </div>
 
@@ -71,7 +71,7 @@ export const DoctorPatientHistoryPage = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white">{patient.name}</h3>
-                      <p className="text-xs font-mono text-slate-500 dark:text-slate-400">{patient.hospitalId}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{patient.age} yrs • {patient.gender}</p>
                     </div>
                   </div>
 

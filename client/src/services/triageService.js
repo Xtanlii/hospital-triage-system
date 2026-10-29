@@ -171,7 +171,7 @@ export const triageService = {
         dbp: diaBP,
         pain,
         gender: context.gender || 'M',
-        arrival_transport: context.arrival_transport || 'UNKNOWN',
+        arrival_transport: context.arrival_transport || 'WALK IN',
         arrival_time: context.arrival_time ? new Date(context.arrival_time).toISOString() : new Date().toISOString()
       });
 
@@ -316,7 +316,7 @@ export const triageService = {
       return {
         acuity: 4,
         prediction: 'Less Urgent',
-        label: 'Level 4 — Less Urgent (Green)',
+        label: 'Level 4 — Less Urgent (Blue)',
         color: 'Green',
         triage_label: 'Green',
         probabilities: null,

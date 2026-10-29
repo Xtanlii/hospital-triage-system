@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * Triage Service (Clinical Assessment, ML Inference & Queue Admission)
+ * ============================================================================
+ * 
+ * Orchestrates the full triage workflow:
+ * 1. Demographic & vital sign intake and normalization (including °C -> °F conversion).
+ * 2. Contract validation for the ML microservice (strict null preservation).
+ * 3. AI Acuity prediction via external Python inference service (with automatic rule engine fallback).
+ * 4. Nurse override management for clinical discretion.
+ * 5. Atomic persistence across TriageAssessment, AcuityPrediction, and QueueEntry.
+ * 6. Automated priority queue re-ranking and cache invalidation.
+ */
+
 const prisma = require('../config/db');
 const mlService = require('./mlService');
 const { recalculateQueuePositions } = require('./queueService');
@@ -6,6 +20,12 @@ const { NotFoundError } = require('../middleware/errorMiddleware');
 const cacheService = require('./cacheService');
 const logger = require('../utils/logger');
 
+/**
+ * Calculates a patient's exact integer age from their date of birth.
+ * 
+ * @param {string|Date} dateOfBirth - Patient birth date.
+ * @returns {number} Age in complete years.
+ */
 function calculateAge(dateOfBirth) {
   const dob = new Date(dateOfBirth);
   const diffMs = Date.now() - dob.getTime();
@@ -13,21 +33,44 @@ function calculateAge(dateOfBirth) {
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
 
+/**
+ * Parses a numerical value safely, preserving strict nulls for missing values.
+ * In clinical ML, missing vitals must remain null (not 0 or NaN) so imputation works accurately.
+ * 
+ * @param {any} val - Input value.
+ * @returns {number|null} Parsed numeric value or null.
+ */
 function parseNullableNumber(val) {
   if (val === null || val === undefined || val === '') return null;
   const num = Number(val);
   return isNaN(num) ? null : num;
 }
 
+/**
+ * Converts clinical temperature to Fahrenheit (°F) with 1-decimal precision.
+ * The machine learning model was trained on Fahrenheit clinical datasets (e.g. MIMIC-IV-ED).
+ * 
+ * @param {number|string|null} temp - Temperature value.
+ * @param {string} [unit='C'] - Source unit ('C' or 'F').
+ * @returns {number|null} Temperature in °F rounded to 1 decimal place, or null if unrecorded.
+ */
 function convertTemperatureToFahrenheit(temp, unit = 'C') {
   if (temp === null || temp === undefined || temp === '') return null;
   const num = Number(temp);
   if (isNaN(num)) return null;
   const u = String(unit).trim().toUpperCase();
+  // If explicitly in Fahrenheit or already in typical Fahrenheit range (> 60)
   if (u === 'F' || num > 60) return Math.round(num * 10) / 10;
+  // Convert Celsius to Fahrenheit
   return Math.round(((num * 9 / 5) + 32) * 10) / 10;
 }
 
+/**
+ * Normalizes patient gender to single-character code ('M' or 'F').
+ * 
+ * @param {string} gender - Input gender string.
+ * @returns {string} 'M' or 'F'.
+ */
 function normalizeGender(gender) {
   if (!gender) return 'M';
   const g = String(gender).trim().toUpperCase();
@@ -36,6 +79,13 @@ function normalizeGender(gender) {
 }
 
 const VALID_TRANSPORTS = ['AMBULANCE', 'WALK IN', 'HELICOPTER', 'OTHER', 'UNKNOWN'];
+
+/**
+ * Validates and normalizes the arrival transport method to supported clinical categories.
+ * 
+ * @param {string} transport - Input transport mode.
+ * @returns {string} Normalized transport string ('AMBULANCE', 'WALK IN', etc.).
+ */
 function normalizeTransport(transport) {
   if (!transport) return 'UNKNOWN';
   const t = String(transport).trim().toUpperCase().replace('-', ' ');
@@ -43,12 +93,24 @@ function normalizeTransport(transport) {
 }
 
 /**
- * Executes the complete triage pipeline:
- * 1. Validates patient existence.
- * 2. Prepares contract features for ML inference service (with °F temperature & strict nulls).
- * 3. Calls external ML inference service with offline fallback.
- * 4. Persists assessment, prediction (including acuity_color), and priority queue entry.
- * 5. Recalculates hospital priority queue positions.
+ * Executes the complete End-to-End Triage Pipeline:
+ * 
+ * Step 1: Validates that the patient exists in the electronic health record.
+ * Step 2: Normalizes vital signs and computes patient age.
+ * Step 3: Builds the 10-feature payload required by the Python ML Inference service.
+ * Step 4: Dispatches features to ML service; falls back to internal clinical heuristics if ML service is unreachable.
+ * Step 5: Evaluates Nurse Clinical Override (if nurse modified AI suggestion, nurse's decision takes precedence).
+ * Step 6: Determines destination clinical department (e.g. Critical Care for Level 1/2, GOPD for Level 3/4).
+ * Step 7: Executes atomic database transaction:
+ *         - Inserts TriageAssessment audit record.
+ *         - Inserts AcuityPrediction record with confidence score.
+ *         - Inserts QueueEntry and immediately re-ranks active patient positions.
+ * Step 8: Flushes queue and dashboard caches for immediate synchronization.
+ * 
+ * @param {Object} clinicalData - Raw triage form submission from triage nurse.
+ * @param {string} nurseId - User ID of the on-duty triage nurse.
+ * @throws {NotFoundError} If the patient ID is invalid.
+ * @returns {Promise<Object>} Aggregated assessment, prediction, queue entry, and patient profile.
  */
 async function performTriage(clinicalData, nurseId) {
   const {
@@ -73,7 +135,7 @@ async function performTriage(clinicalData, nurseId) {
     nurse_override
   } = clinicalData || {};
 
-  // 1. Verify patient exists
+  // 1. Verify patient exists in database
   const patient = await prisma.patient.findUnique({
     where: { patient_id }
   });
@@ -84,7 +146,7 @@ async function performTriage(clinicalData, nurseId) {
 
   const age = calculateAge(patient.date_of_birth);
 
-  // Parse incoming values safely preserving nulls
+  // 2. Parse incoming clinical values safely, preserving nulls for unmeasured vitals
   const sbpVal = parseNullableNumber(systolic_bp ?? sbp);
   const dbpVal = parseNullableNumber(diastolic_bp ?? dbp);
   const hrVal = parseNullableNumber(heart_rate ?? heartrate);
@@ -99,7 +161,7 @@ async function performTriage(clinicalData, nurseId) {
   const tempF = convertTemperatureToFahrenheit(rawTemp, temperature_unit);
   const genderCode = normalizeGender(patient.gender);
 
-  // 2. Format clinical features for ML inference service (exact 10 documented fields + context)
+  // 3. Format clinical features for ML inference service (exact 10 documented contract fields + context)
   const featuresForML = {
     temperature: tempF,
     heartrate: hrVal,
@@ -111,15 +173,15 @@ async function performTriage(clinicalData, nurseId) {
     gender: genderCode,
     arrival_transport: transportVal,
     arrival_time: arrivalTimeIso,
-    // Context fields for offline rule fallback engine
+    // Supplemental context fields for the offline clinical rule engine fallback
     age,
     chief_complaint_code: ccVal
   };
 
-  // 3. Call ML inference service
+  // 4. Request ML prediction from microservice (or internal rule fallback)
   const predictionResult = await mlService.predictAcuity(featuresForML);
 
-  // 4. Clinical decision & override handling
+  // 5. Nurse override handling: Nurse's clinical assessment supersedes AI recommendation
   const isOverridden = Boolean(nurse_override?.is_overridden && nurse_override?.override_acuity);
   const finalAcuity = isOverridden 
     ? normalizeAcuity(nurse_override.override_acuity)
@@ -127,9 +189,9 @@ async function performTriage(clinicalData, nurseId) {
   const finalColor = getAcuityColor(finalAcuity);
   const department = getDepartmentForAcuity(finalAcuity);
 
-  // 5. Atomic transaction for storing assessment, prediction, and queue entry
+  // 6. Execute atomic database transaction to prevent partial triage entries
   const result = await prisma.$transaction(async (tx) => {
-    // A. Create Triage Assessment
+    // A. Create permanent clinical assessment record
     const assessment = await tx.triageAssessment.create({
       data: {
         patient_id,
@@ -147,7 +209,7 @@ async function performTriage(clinicalData, nurseId) {
       }
     });
 
-    // B. Create Acuity Prediction
+    // B. Create AI prediction audit record
     const prediction = await tx.acuityPrediction.create({
       data: {
         assessment_id: assessment.assessment_id,
@@ -158,22 +220,22 @@ async function performTriage(clinicalData, nurseId) {
       }
     });
 
-    // C. Create Queue Entry
+    // C. Insert patient into the hospital queue
     const queueEntry = await tx.queueEntry.create({
       data: {
         patient_id,
         prediction_id: prediction.prediction_id,
         acuity_level: finalAcuity,
         department,
-        queue_position: 9999,
+        queue_position: 9999, // Temporary position before atomic re-ranking
         status: 'Waiting'
       }
     });
 
-    // D. Recalculate all active queue positions
+    // D. Re-rank all active hospital queue positions atomically
     await recalculateQueuePositions(tx);
 
-    // E. Retrieve updated queue entry
+    // E. Retrieve newly assigned priority position
     const finalQueueEntry = await tx.queueEntry.findUnique({
       where: { queue_id: queueEntry.queue_id }
     });
@@ -213,6 +275,7 @@ async function performTriage(clinicalData, nurseId) {
     }
   });
 
+  // 7. Invalidate cached queue and administrative analytics
   await cacheService.delPattern('queue:*');
   await cacheService.del('admin:dashboard');
 
@@ -220,7 +283,12 @@ async function performTriage(clinicalData, nurseId) {
 }
 
 /**
- * Retrieves a triage assessment with its prediction and patient info.
+ * Retrieves a detailed triage assessment by its primary ID.
+ * Includes assessing nurse credentials, AI prediction outputs, and queue entries.
+ * 
+ * @param {string} assessment_id - UUID of the assessment record.
+ * @throws {NotFoundError} If no assessment matches the ID.
+ * @returns {Promise<Object>} Full assessment record.
  */
 async function getAssessmentById(assessment_id) {
   const assessment = await prisma.triageAssessment.findUnique({
@@ -246,7 +314,11 @@ async function getAssessmentById(assessment_id) {
 }
 
 /**
- * Retrieves all triage assessments for a patient.
+ * Retrieves all historical triage assessments recorded for a specific patient.
+ * 
+ * @param {string} patient_id - UUID of the patient.
+ * @throws {NotFoundError} If the patient does not exist.
+ * @returns {Promise<Array<Object>>} Assessments sorted newest first.
  */
 async function getAssessmentsByPatientId(patient_id) {
   const patient = await prisma.patient.findUnique({ where: { patient_id } });
@@ -271,4 +343,3 @@ module.exports = {
   getAssessmentById,
   getAssessmentsByPatientId
 };
-

@@ -51,13 +51,12 @@ export const NewTriagePage = () => {
   // Clinical Symptoms State
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [symptoms, setSymptoms] = useState('');
-  const [symptomDuration, setSymptomDuration] = useState('2 hours');
+  const [symptomDuration, setSymptomDuration] = useState('< 6 hours');
   const [painLevel, setPainLevel] = useState(4);
   const [isPainUnreportable, setIsPainUnreportable] = useState(false);
 
   // Arrival Logistics State
   const [arrivalTransport, setArrivalTransport] = useState('AMBULANCE');
-  const [arrivalTime, setArrivalTime] = useState(() => new Date().toISOString().slice(0, 16));
 
   // Vital Signs State - blank by default (nullable)
   const [vitals, setVitals] = useState({
@@ -103,8 +102,7 @@ export const NewTriagePage = () => {
       const activePain = isPainUnreportable ? null : painLevel;
       const result = await triageService.runPrediction(vitals, chiefComplaint, symptoms, activePain, {
         gender: selectedPatient?.gender || 'M',
-        arrival_transport: arrivalTransport,
-        arrival_time: arrivalTime
+        arrival_transport: arrivalTransport
       });
       setPredictionResult(result);
       setFinalLevel(result.prediction);
@@ -182,11 +180,6 @@ export const NewTriagePage = () => {
     };
 
     const isOverridden = Boolean(predictionResult && finalLevel && normalizeAcuity(predictionResult.prediction) !== normalizeAcuity(finalLevel));
-    if (isOverridden && !overrideReason.trim()) {
-      setOverrideError('A clinical override reason is required for governance compliance.');
-      showToast('Override Reason Required', 'Please document why the AI suggestion was changed.', 'warning');
-      return;
-    }
 
     // Helper to safely parse nullable vital numbers: strict null for blank or NaN
     const parseNullable = (v) => (v !== null && v !== undefined && String(v).trim() !== '' && !isNaN(Number(v))) ? Number(v) : null;
@@ -219,7 +212,6 @@ export const NewTriagePage = () => {
       symptoms,
       symptomDuration,
       arrival_transport: arrivalTransport,
-      arrival_time: arrivalTime ? new Date(arrivalTime).toISOString() : new Date().toISOString(),
       pain_score: painVal,
       painLevel: painVal,
       temperature: tempVal,
@@ -326,22 +318,18 @@ export const NewTriagePage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Select Arrived Patient <span className="text-rose-500">*</span>
-              </label>
-              <select
+              <SelectInput
+                label="Select Arrived Patient"
+                id="select-patient"
+                required
                 value={selectedPatientId}
                 onChange={(e) => setSelectedPatientId(e.target.value)}
-                required
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:border-clinical-500 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-medium"
-              >
-                <option value="">-- Choose patient from intake registry --</option>
-                {filteredPatients.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.hospitalId}) · {p.age}y, {p.gender}
-                  </option>
-                ))}
-              </select>
+                placeholder="-- Choose patient from intake registry --"
+                options={filteredPatients.map(p => ({
+                  value: p.id,
+                  label: `${p.name} · ${p.age}y, ${p.gender}`
+                }))}
+              />
               {patientSearch && filteredPatients.length === 0 && (
                 <p className="text-[11px] text-rose-500 mt-1">No patient found matching "{patientSearch}"</p>
               )}
@@ -373,7 +361,7 @@ export const NewTriagePage = () => {
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white">{selectedPatient.name}</h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      ID: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{selectedPatient.hospitalId}</span> • {selectedPatient.age} years • {selectedPatient.gender}
+                      {selectedPatient.age} years • {selectedPatient.gender}
                     </p>
                   </div>
                 </div>
@@ -405,36 +393,19 @@ export const NewTriagePage = () => {
             </div>
           )}
 
-          {/* Arrival Logistics (Model Contract: arrival_transport & arrival_time) */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="arrival-transport" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Arrival Transport Mode <span className="text-rose-500">*</span>
-              </label>
-              <select
+          {/* Arrival Logistics (Model Contract: arrival_transport) */}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="max-w-xs">
+              <SelectInput
+                label="Arrival Transport Mode"
                 id="arrival-transport"
+                required
                 value={arrivalTransport}
                 onChange={(e) => setArrivalTransport(e.target.value)}
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:border-clinical-500 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-medium"
-              >
-                <option value="AMBULANCE">AMBULANCE</option>
-                <option value="WALK IN">WALK IN</option>
-                <option value="HELICOPTER">HELICOPTER</option>
-                <option value="OTHER">OTHER</option>
-                <option value="UNKNOWN">UNKNOWN</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="arrival-time" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Arrival Datetime
-              </label>
-              <input
-                id="arrival-time"
-                type="datetime-local"
-                value={arrivalTime}
-                onChange={(e) => setArrivalTime(e.target.value)}
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:border-clinical-500 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-mono"
+                options={[
+                  { value: 'AMBULANCE', label: 'AMBULANCE' },
+                  { value: 'WALK IN', label: 'WALK IN' }
+                ]}
               />
             </div>
           </div>
@@ -461,12 +432,19 @@ export const NewTriagePage = () => {
             </div>
 
             <div>
-              <FormInput
+              <SelectInput
                 label="Symptom Duration"
                 id="duration"
                 value={symptomDuration}
                 onChange={(e) => setSymptomDuration(e.target.value)}
-                placeholder="e.g. 45 minutes, 2 days"
+                options={[
+                  { value: '< 6 hours', label: '< 6 hours' },
+                  { value: '6 - 24 hours', label: '6 - 24 hours' },
+                  { value: '1 - 3 days', label: '1 - 3 days' },
+                  { value: '1 week', label: '1 week' },
+                  { value: '2 weeks', label: '2 weeks' },
+                  { value: '> 2 weeks', label: '> 2 weeks' }
+                ]}
               />
             </div>
           </div>

@@ -124,7 +124,7 @@ export const AdminDashboard = () => {
               <span className="font-bold text-slate-800 dark:text-slate-200">{stats.level3Count}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
               <span className="text-slate-500 dark:text-slate-400">Less Urgent:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{stats.level4Count}</span>
             </div>

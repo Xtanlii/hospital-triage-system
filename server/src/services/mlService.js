@@ -1,13 +1,32 @@
+/**
+ * ============================================================================
+ * Machine Learning Inference Service (Client & Clinical Fallback Gateway)
+ * ============================================================================
+ * 
+ * Responsibilities:
+ * - Formats clinical data strictly to the ML model contract (10 core fields).
+ * - Enforces data typing: °F conversion, numeric floats, null-preservation for uncollected vitals.
+ * - HTTP communication with the Python ML inference microservice (`/predict`).
+ * - High-availability resilience: Automatically switches to the rule-based Clinical
+ *   ESI heuristic engine if the Python service is offline, unresponsive, or returning 5xx.
+ * - Normalizes various model response formats (probabilities, confidence scores, acuity levels).
+ */
+
 const env = require('../config/env');
 const logger = require('../utils/logger');
 const { MLServiceUnavailableError } = require('../middleware/errorMiddleware');
 const { isValidAcuity, normalizeAcuity, getAcuityColor } = require('../utils/acuityUtils');
 const { evaluateClinicalRules } = require('../utils/clinicalRuleEngine');
 
+/** Valid arrival transport modes accepted by both Python ML and DB schemas */
 const VALID_TRANSPORTS = ['AMBULANCE', 'WALK IN', 'HELICOPTER', 'OTHER', 'UNKNOWN'];
 
 /**
- * Normalizes input value to float/int number, or strictly null.
+ * Normalizes an input value to a floating point or integer number, or strictly null.
+ * Crucial for ML inference: missing vital signs must NOT be converted to 0 (which would be fatal/inaccurate).
+ * 
+ * @param {any} value - Raw input value from request.
+ * @returns {number|null} Clean numeric float or null if empty/invalid.
  */
 function parseNullableFloat(value) {
   if (value === null || value === undefined || value === '') return null;
@@ -16,7 +35,15 @@ function parseNullableFloat(value) {
 }
 
 /**
- * Converts temperature to Fahrenheit (°F) with 1 decimal precision, or null.
+ * Converts clinical temperature from Celsius (°C) to Fahrenheit (°F) with 1 decimal precision.
+ * 
+ * Clinical datasets (e.g., MIMIC-IV-ED) use Fahrenheit for vital sign regression/classification.
+ * - If unit is already 'F' or value > 60 (implied °F), it preserves value.
+ * - Otherwise converts via (C * 9/5) + 32.
+ * 
+ * @param {number|string|null} temp - Temperature value.
+ * @param {string} [unit='C'] - Source unit ('C' or 'F').
+ * @returns {number|null} Formatted Fahrenheit temperature or null.
  */
 function formatTemperatureFahrenheit(temp, unit = 'C') {
   if (temp === null || temp === undefined || temp === '') return null;
@@ -31,7 +58,10 @@ function formatTemperatureFahrenheit(temp, unit = 'C') {
 }
 
 /**
- * Normalizes gender to strictly 'M' or 'F'.
+ * Normalizes gender input to single uppercase character ('M' or 'F').
+ * 
+ * @param {string} gender - Input string ('Male', 'Female', 'M', 'F').
+ * @returns {string} Strictly 'M' or 'F'.
  */
 function normalizeGender(gender) {
   if (!gender) return 'M';
@@ -41,7 +71,10 @@ function normalizeGender(gender) {
 }
 
 /**
- * Normalizes arrival transport to allowed enum.
+ * Normalizes arrival transport to allowed enum values accepted by the ML model.
+ * 
+ * @param {string} transport - Mode of arrival ('AMBULANCE', 'WALK-IN', etc.).
+ * @returns {string} Normalized transport string.
  */
 function normalizeArrivalTransport(transport) {
   if (!transport) return 'UNKNOWN';
@@ -51,7 +84,10 @@ function normalizeArrivalTransport(transport) {
 }
 
 /**
- * Normalizes arrival time to ISO 8601 string.
+ * Normalizes arrival time to ISO 8601 string, defaulting to current time if absent.
+ * 
+ * @param {string|Date|null} arrivalTime - Input arrival timestamp.
+ * @returns {string} ISO 8601 formatted date string.
  */
 function normalizeArrivalTime(arrivalTime) {
   if (!arrivalTime) return new Date().toISOString();
@@ -60,11 +96,20 @@ function normalizeArrivalTime(arrivalTime) {
 }
 
 /**
- * Constructs the exact 10 documented fields expected by the ML model contract.
- * Uncollected fields are strictly preserved as null (never omitted, never 0, never NaN).
+ * Constructs the exact 10 documented fields expected by the Python ML model contract:
+ * - temperature: Float (°F) or null
+ * - heartrate: Float (BPM) or null
+ * - resprate: Float (breaths/min) or null
+ * - o2sat: Float (%) or null
+ * - sbp: Float (mmHg) or null
+ * - dbp: Float (mmHg) or null
+ * - pain: Float (0-10) or null
+ * - gender: 'M' or 'F'
+ * - arrival_transport: 'AMBULANCE' | 'WALK IN' | 'OTHER' | 'UNKNOWN'
+ * - arrival_time: ISO-8601 string
  * 
- * @param {Object} features Raw clinical features
- * @returns {Object} Contract-compliant ML payload
+ * @param {Object} features - Raw clinical input from triage form.
+ * @returns {Object} Strict contract-compliant JSON payload.
  */
 function formatMLPayload(features) {
   const f = features || {};
@@ -82,7 +127,10 @@ function formatMLPayload(features) {
   };
 }
 
+/** The 6 foundational physiological parameters evaluated during triage */
 const CORE_VITAL_KEYS = ['temperature', 'heartrate', 'resprate', 'o2sat', 'sbp', 'dbp'];
+
+/** Mapping from ESI text labels to standard 1-5 integer indices */
 const ACUITY_TO_NUMBER = {
   'Immediate': 1,
   'Emergent': 2,
@@ -91,6 +139,13 @@ const ACUITY_TO_NUMBER = {
   'Non-urgent': 5
 };
 
+/**
+ * Computes diagnostic flags when operating under fallback conditions:
+ * Identifies unrecorded vitals and recommends manual reassessment if fewer than 3 core vitals exist.
+ * 
+ * @param {Object} mlPayload - Formatted clinical payload.
+ * @returns {Object} Diagnostic summary.
+ */
 function computeFallbackDiagnostics(mlPayload) {
   const missing = CORE_VITAL_KEYS.filter(k => mlPayload[k] === null || mlPayload[k] === undefined);
   if (mlPayload.pain === null || mlPayload.pain === undefined) {
@@ -104,6 +159,13 @@ function computeFallbackDiagnostics(mlPayload) {
   };
 }
 
+/**
+ * Builds a structured fallback response using the deterministic clinical rule engine.
+ * 
+ * @param {Object} clinicalFeatures - Original clinical input with supplemental context.
+ * @param {Object} mlPayload - Formatted vital signs.
+ * @returns {Object} Full prediction result structure matching the ML service interface.
+ */
 function buildFallbackResponse(clinicalFeatures, mlPayload) {
   const fallbackResult = evaluateClinicalRules(clinicalFeatures);
   const normalizedAcuity = normalizeAcuity(fallbackResult.predicted_acuity);
@@ -123,14 +185,17 @@ function buildFallbackResponse(clinicalFeatures, mlPayload) {
 }
 
 /**
- * Communicates with the ML Inference Service with automatic offline fallback.
+ * Dispatches clinical vitals to the Python ML Inference service with automatic offline fallback.
  * 
- * If the ML service is unreachable, offline, or returns an error, the system
- * automatically falls back to the deterministic Clinical ESI Rule Engine so
- * that critical patient triage and queueing are NEVER interrupted.
+ * Resilience Mechanism:
+ * - Communicates with `http://127.0.0.1:8000/predict` using strict timeout (e.g., 5000ms).
+ * - If the Python service is offline, cold-starting, or encounters an internal exception,
+ *   the call seamlessly switches to the internal Clinical ESI Rule Engine.
+ * - This ensures triage and queue admissions NEVER fail, maintaining continuous ED operations.
  * 
- * @param {Object} clinicalFeatures
- * @returns {Promise<Object>} { acuity, predicted_acuity, acuity_color, triage_label, probabilities, manual_assessment_recommended, missing_fields, ignored_out_of_range, confidence_score, model_used, is_offline_fallback }
+ * @param {Object} clinicalFeatures - Vital signs and patient attributes.
+ * @throws {MLServiceUnavailableError} Only if fallback is disabled in env configuration.
+ * @returns {Promise<Object>} Formatted prediction result including predicted_acuity, color, confidence_score, and model_used.
  */
 async function predictAcuity(clinicalFeatures) {
   const url = `${env.ML_SERVICE_URL}/predict`;
@@ -145,6 +210,7 @@ async function predictAcuity(clinicalFeatures) {
 
   let response;
   try {
+    // 1. Send HTTP POST with configurable timeout
     const signal = AbortSignal.timeout(env.ML_SERVICE_TIMEOUT_MS);
     response = await fetch(url, {
       method: 'POST',
@@ -156,6 +222,7 @@ async function predictAcuity(clinicalFeatures) {
       signal
     });
   } catch (err) {
+    // 2. Network error or timeout: activate offline fallback engine
     logger.warn('ML inference service is unreachable or timed out. Activating Clinical ESI Offline Fallback Engine.', {
       meta: {
         url,
@@ -173,6 +240,7 @@ async function predictAcuity(clinicalFeatures) {
     );
   }
 
+  // 3. Handle non-200 HTTP responses
   if (!response.ok) {
     const errorText = await response.text().catch(() => 'No response body');
     logger.warn(`ML service returned error HTTP ${response.status}. Activating Clinical ESI Offline Fallback.`, {
@@ -188,6 +256,7 @@ async function predictAcuity(clinicalFeatures) {
     );
   }
 
+  // 4. Parse JSON response body
   let data;
   try {
     data = await response.json();
@@ -203,7 +272,7 @@ async function predictAcuity(clinicalFeatures) {
     throw new MLServiceUnavailableError('ML Inference Service returned invalid JSON response');
   }
 
-  // Parse response: supports { acuity: 1..5, triage_label, probabilities, manual_assessment_recommended, ... }, raw integer (1..5), { prediction: 1..5 }, { predicted_acuity: 1..5 }, [1..5]
+  // 5. Unpack various possible model response schemas
   let rawAcuity = null;
   let rawConfidence = undefined;
   let modelUsed = null;
@@ -228,6 +297,7 @@ async function predictAcuity(clinicalFeatures) {
     triageLabel = data.triage_label;
   }
 
+  // 6. Validate that returned acuity is a legitimate clinical ESI category
   if (!rawAcuity || !isValidAcuity(rawAcuity)) {
     logger.warn('ML service returned invalid acuity label. Activating Clinical ESI Offline Fallback.', {
       meta: { data }
@@ -246,7 +316,7 @@ async function predictAcuity(clinicalFeatures) {
   const acuityColor = triageLabel || getAcuityColor(normalizedAcuity);
   const acuityNum = ACUITY_TO_NUMBER[normalizedAcuity] || Number(rawAcuity) || 3;
 
-  // Derive confidence from explicit confidence_score or the predicted class probability
+  // 7. Derive confidence score from explicit metric or predicted class probability
   let confidence = 0.85;
   if (rawConfidence !== undefined && rawConfidence !== null) {
     const parsedConf = Number(rawConfidence);
@@ -262,6 +332,7 @@ async function predictAcuity(clinicalFeatures) {
 
   const fallbackDiag = computeFallbackDiagnostics(mlPayload);
 
+  // 8. Package final normalized result
   const result = {
     acuity: acuityNum,
     predicted_acuity: normalizedAcuity,

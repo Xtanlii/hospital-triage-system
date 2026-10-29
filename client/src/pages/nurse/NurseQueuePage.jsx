@@ -13,6 +13,7 @@ import {
 import { TriageBadge } from '../../components/common/TriageBadge';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { SearchBar } from '../../components/common/SearchBar';
+import { SelectInput } from '../../components/common/SelectInput';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { PatientDetailModal } from '../../components/doctor/PatientDetailModal';
@@ -92,48 +93,46 @@ export const NurseQueuePage = () => {
             value={searchQuery}
             onChange={setSearchQuery}
             onClear={() => setSearchQuery('')}
-            placeholder="Search patient, ID, or queue #..."
+            placeholder="Search patient or queue #..."
           />
 
           {/* Department Filter */}
-          <select
+          <SelectInput
             value={selectedDept}
             onChange={(e) => setSelectedDept(e.target.value)}
-            className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-medium"
-          >
-            <option value="ALL">All Departments</option>
-            {departments.map(d => (
-              <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
-            ))}
-          </select>
+            options={[
+              { value: 'ALL', label: 'All Departments' },
+              ...departments.map(d => ({ value: d.id, label: `${d.name} (${d.code})` }))
+            ]}
+          />
 
           {/* Triage Level Filter */}
-          <select
+          <SelectInput
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-medium"
-          >
-            <option value="ALL">All Urgency Levels</option>
-            <option value="LEVEL 1">Immediate (Red)</option>
-            <option value="LEVEL 2">Emergent (Orange)</option>
-            <option value="LEVEL 3">Urgent (Yellow)</option>
-            <option value="LEVEL 4">Less Urgent (Green)</option>
-            <option value="LEVEL 5">Non-Urgent (Blue)</option>
-          </select>
+            options={[
+              { value: 'ALL', label: 'All Urgency Levels' },
+              { value: 'LEVEL 1', label: 'Immediate (Red)' },
+              { value: 'LEVEL 2', label: 'Emergent (Orange)' },
+              { value: 'LEVEL 3', label: 'Urgent (Yellow)' },
+              { value: 'LEVEL 4', label: 'Less Urgent (Blue)' },
+              { value: 'LEVEL 5', label: 'Non-Urgent (Blue)' }
+            ]}
+          />
 
           {/* Status Filter */}
-          <select
+          <SelectInput
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-medium"
-          >
-            <option value="ALL">All Queue Statuses</option>
-            <option value="Waiting">Waiting</option>
-            <option value="Called">Called</option>
-            <option value="In Consultation">In Consultation</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
+            options={[
+              { value: 'ALL', label: 'All Queue Statuses' },
+              { value: 'Waiting', label: 'Waiting' },
+              { value: 'Called', label: 'Called' },
+              { value: 'In Consultation', label: 'In Consultation' },
+              { value: 'Completed', label: 'Completed' },
+              { value: 'Cancelled', label: 'Cancelled' }
+            ]}
+          />
         </div>
       </div>
 
@@ -205,7 +204,7 @@ export const NurseQueuePage = () => {
                             <button
                               onClick={() => callPatient(item.id, currentUser?.name)}
                               title="Call patient"
-                              className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
+                              className="p-1.5 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 rounded-lg border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer"
                             >
                               <BellRing size={13} />
                             </button>

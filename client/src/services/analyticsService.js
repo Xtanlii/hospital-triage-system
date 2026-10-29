@@ -26,7 +26,7 @@ export const analyticsService = {
       { name: 'Immediate', value: l1 || 2, color: '#E11D48' },
       { name: 'Emergent', value: l2 || 3, color: '#EA580C' },
       { name: 'Urgent', value: l3 || 4, color: '#D97706' },
-      { name: 'Less Urgent', value: l4 || 3, color: '#059669' },
+      { name: 'Less Urgent', value: l4 || 3, color: '#3B82F6' },
       { name: 'Non-Urgent', value: l5 || 2, color: '#2563EB' },
     ];
   },

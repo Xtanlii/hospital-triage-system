@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TriageBadge } from '../../components/common/TriageBadge';
 import { SearchBar } from '../../components/common/SearchBar';
+import { SelectInput } from '../../components/common/SelectInput';
 import { PatientDetailModal } from '../../components/doctor/PatientDetailModal';
 import { Eye, ShieldCheck, AlertTriangle, CheckCircle2, ClipboardList } from 'lucide-react';
 
@@ -38,8 +39,17 @@ export const NurseAssessmentsPage = () => {
     return matchesSearch && matchesLevel;
   });
 
-  const matchedPatient = selectedAssessment ? patients.find(p => p.id === selectedAssessment.patientId) : null;
-  const matchedQueue = selectedAssessment ? queue.find(q => q.assessmentId === selectedAssessment.id) : null;
+  const matchedPatient = selectedAssessment 
+    ? (patients.find(p => p.id === selectedAssessment.patientId) || selectedAssessment.patient || {
+        name: selectedAssessment.patientName,
+        age: selectedAssessment.patientAge || 35,
+        gender: selectedAssessment.patientGender || 'Unknown',
+        id: selectedAssessment.patientId
+      })
+    : null;
+  const matchedQueue = selectedAssessment 
+    ? queue.find(q => q.assessmentId === selectedAssessment.id || q.id === selectedAssessment.queueId) 
+    : null;
 
   return (
     <div className="space-y-6">
@@ -70,18 +80,19 @@ export const NurseAssessmentsPage = () => {
         />
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
+          <SelectInput
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            className="w-full sm:w-auto rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-medium"
-          >
-            <option value="ALL">All Urgency Levels</option>
-            <option value="LEVEL 1">Immediate (Red)</option>
-            <option value="LEVEL 2">Emergent (Orange)</option>
-            <option value="LEVEL 3">Urgent (Yellow)</option>
-            <option value="LEVEL 4">Less Urgent (Green)</option>
-            <option value="LEVEL 5">Non-Urgent (Blue)</option>
-          </select>
+            className="w-full sm:w-48"
+            options={[
+              { value: 'ALL', label: 'All Urgency Levels' },
+              { value: 'LEVEL 1', label: 'Immediate (Red)' },
+              { value: 'LEVEL 2', label: 'Emergent (Orange)' },
+              { value: 'LEVEL 3', label: 'Urgent (Yellow)' },
+              { value: 'LEVEL 4', label: 'Less Urgent (Blue)' },
+              { value: 'LEVEL 5', label: 'Non-Urgent (Blue)' }
+            ]}
+          />
         </div>
       </div>
 

@@ -305,8 +305,8 @@ export const AppProvider = ({ children }) => {
   const registerPatient = async (patientData) => {
     const newPatient = await patientService.registerPatient(patientData);
     setPatients(prev => [newPatient, ...prev.filter(p => p.id !== newPatient.id)]);
-    logActivity(`New patient intake registered: ${newPatient.name} (${newPatient.hospitalId})`, 'INTAKE', 'Intake');
-    showToast('Patient Registered', `${newPatient.name} has been assigned ID ${newPatient.hospitalId}.`, 'success');
+    logActivity(`New patient intake registered: ${newPatient.name}`, 'INTAKE', 'Intake');
+    showToast('Patient Registered', `${newPatient.name} has been registered successfully.`, 'success');
     return newPatient;
   };
 

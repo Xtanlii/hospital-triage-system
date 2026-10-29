@@ -497,7 +497,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-er',
     departmentName: 'Emergency Medicine',
-    timestamp: '2026-09-17T17:45:00+01:00'
+    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-002',
@@ -525,7 +525,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-er',
     departmentName: 'Emergency Medicine',
-    timestamp: '2026-09-17T17:50:00+01:00'
+    timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-003',
@@ -553,7 +553,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: 'Severe sickle cell crisis with SpO2 92% and extreme bone pain requiring immediate opioid titration and IV hydration.',
     departmentId: 'dept-er',
     departmentName: 'Emergency Medicine',
-    timestamp: '2026-09-17T17:55:00+01:00'
+    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-004',
@@ -581,7 +581,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-gopd',
     departmentName: 'General Outpatient (GOPD)',
-    timestamp: '2026-09-17T17:30:00+01:00'
+    timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-005',
@@ -609,7 +609,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-surg',
     departmentName: 'General Surgery',
-    timestamp: '2026-09-17T17:35:00+01:00'
+    timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-006',
@@ -637,7 +637,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: 'Pre-eclampsia warning signs (BP 158/102, headache, visual scotoma) in 28-week pregnancy requires urgent OB/GYN evaluation.',
     departmentId: 'dept-obgyn',
     departmentName: 'Obstetrics & Gynecology',
-    timestamp: '2026-09-17T17:20:00+01:00'
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-007',
@@ -665,7 +665,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-ped',
     departmentName: 'Pediatrics',
-    timestamp: '2026-09-17T17:10:00+01:00'
+    timestamp: new Date(Date.now() - 35 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-008',
@@ -693,7 +693,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-gopd',
     departmentName: 'General Outpatient (GOPD)',
-    timestamp: '2026-09-17T17:05:00+01:00'
+    timestamp: new Date(Date.now() - 40 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-009',
@@ -721,7 +721,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-gopd',
     departmentName: 'General Outpatient (GOPD)',
-    timestamp: '2026-09-17T16:50:00+01:00'
+    timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString()
   },
   {
     id: 'ass-010',
@@ -749,7 +749,7 @@ export const MOCK_ASSESSMENTS = [
     overrideReason: '',
     departmentId: 'dept-cardio',
     departmentName: 'Cardiology',
-    timestamp: '2026-09-17T16:40:00+01:00'
+    timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString()
   }
 ];
 
@@ -766,7 +766,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 1',
     chiefComplaint: 'Crushing retrosternal chest pain radiating to jaw (SpO2 89%)',
     status: 'In Consultation',
-    checkInTime: '2026-09-17T17:40:00+01:00',
+    checkInTime: new Date(Date.now() - 42 * 60 * 1000).toISOString(),
     waitingMinutes: 42,
     assignedDoctor: 'Dr. Chinedu Eze',
     assessmentId: 'ass-001'
@@ -783,7 +783,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 1',
     chiefComplaint: 'Acute left-sided hemiparesis and dysphasia (Stroke Alert)',
     status: 'Waiting',
-    checkInTime: '2026-09-17T17:48:00+01:00',
+    checkInTime: new Date(Date.now() - 34 * 60 * 1000).toISOString(),
     waitingMinutes: 34,
     assignedDoctor: 'Dr. Chinedu Eze',
     assessmentId: 'ass-002'
@@ -800,7 +800,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 1',
     chiefComplaint: 'Severe sickle cell crisis, refractory bone pain (Overridden by Nurse)',
     status: 'Called',
-    checkInTime: '2026-09-17T17:52:00+01:00',
+    checkInTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
     waitingMinutes: 30,
     assignedDoctor: 'Dr. Chinedu Eze',
     assessmentId: 'ass-003'
@@ -817,7 +817,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 2',
     chiefComplaint: 'Acute heart failure exacerbation, orthopnea, SpO2 91%',
     status: 'Waiting',
-    checkInTime: '2026-09-17T16:35:00+01:00',
+    checkInTime: new Date(Date.now() - 47 * 60 * 1000).toISOString(),
     waitingMinutes: 47,
     assignedDoctor: 'Dr. Ibrahim Musa',
     assessmentId: 'ass-010'
@@ -834,7 +834,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 3',
     chiefComplaint: 'High fever 39.4C, severe chills and persistent vomiting',
     status: 'Waiting',
-    checkInTime: '2026-09-17T17:25:00+01:00',
+    checkInTime: new Date(Date.now() - 57 * 60 * 1000).toISOString(),
     waitingMinutes: 57,
     assignedDoctor: 'Dr. Folake Adeleke',
     assessmentId: 'ass-004'
@@ -851,7 +851,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 3',
     chiefComplaint: 'Acute lower quadrant abdominal guarding, suspected appendicitis',
     status: 'Waiting',
-    checkInTime: '2026-09-17T17:30:00+01:00',
+    checkInTime: new Date(Date.now() - 52 * 60 * 1000).toISOString(),
     waitingMinutes: 52,
     assignedDoctor: 'Dr. Olumide Bakare',
     assessmentId: 'ass-005'
@@ -868,7 +868,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 3',
     chiefComplaint: 'Pre-eclampsia screen: BP 158/102 with scotoma at 28 weeks',
     status: 'Waiting',
-    checkInTime: '2026-09-17T17:15:00+01:00',
+    checkInTime: new Date(Date.now() - 67 * 60 * 1000).toISOString(),
     waitingMinutes: 67,
     assignedDoctor: 'Dr. Folake Adeleke',
     assessmentId: 'ass-006'
@@ -885,7 +885,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 4',
     chiefComplaint: 'Mild expiratory wheezing, afebrile, active',
     status: 'Waiting',
-    checkInTime: '2026-09-17T17:05:00+01:00',
+    checkInTime: new Date(Date.now() - 77 * 60 * 1000).toISOString(),
     waitingMinutes: 77,
     assignedDoctor: 'Dr. Adaeze Obi',
     assessmentId: 'ass-007'
@@ -902,7 +902,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 4',
     chiefComplaint: 'Forearm laceration dressing change and suture review',
     status: 'Waiting',
-    checkInTime: '2026-09-17T17:00:00+01:00',
+    checkInTime: new Date(Date.now() - 82 * 60 * 1000).toISOString(),
     waitingMinutes: 82,
     assignedDoctor: 'Dr. Folake Adeleke',
     assessmentId: 'ass-008'
@@ -919,7 +919,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 5',
     chiefComplaint: 'Epigastric dyspepsia refill check',
     status: 'Completed',
-    checkInTime: '2026-09-17T16:15:00+01:00',
+    checkInTime: new Date(Date.now() - 28 * 60 * 1000).toISOString(),
     waitingMinutes: 28,
     assignedDoctor: 'Dr. Folake Adeleke',
     assessmentId: 'ass-009'
@@ -936,7 +936,7 @@ export const INITIAL_QUEUE_ENTRIES = [
     triageLevel: 'LEVEL 5',
     chiefComplaint: 'Routine medical certificate renewal and vision wellness inquiry',
     status: 'Waiting',
-    checkInTime: '2026-09-17T16:45:00+01:00',
+    checkInTime: new Date(Date.now() - 65 * 60 * 1000).toISOString(),
     waitingMinutes: 65,
     assignedDoctor: 'Dr. Folake Adeleke',
     assessmentId: 'ass-009'

@@ -6,7 +6,7 @@ const COLOUR_SWATCH = {
   Red: 'bg-rose-600 text-white border-rose-700',
   Orange: 'bg-orange-500 text-white border-orange-600',
   Yellow: 'bg-amber-400 text-slate-950 border-amber-500',
-  Green: 'bg-emerald-600 text-white border-emerald-700',
+  Green: 'bg-blue-600 text-white border-blue-700',
   Blue: 'bg-blue-600 text-white border-blue-700'
 };
 

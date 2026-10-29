@@ -36,10 +36,10 @@ export const FormInput = ({
           min={min}
           max={max}
           step={step}
-          className={`block w-full rounded-xl border px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-clinical-500/20 transition-all dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 ${
+          className={`block w-full rounded-xl border px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-clinical-500/20 dark:focus:ring-emerald-500/25 transition-all dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 ${
             error
               ? 'border-rose-300 bg-rose-50/20 focus:border-rose-500 focus:ring-rose-500/20 dark:border-rose-800'
-              : 'border-slate-300 bg-white hover:border-slate-400 focus:border-clinical-500 dark:border-slate-700 dark:hover:border-slate-600'
+              : 'border-slate-300 bg-white hover:border-slate-400 focus:border-clinical-500 dark:border-slate-700 dark:hover:border-slate-600 dark:focus:border-emerald-500'
           } ${disabled ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed text-slate-500 dark:text-slate-400' : ''} ${
             suffix ? 'pr-12' : ''
           }`}

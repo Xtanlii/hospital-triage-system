@@ -196,7 +196,7 @@ export const NurseDashboard = () => {
               <button
                 onClick={() => setFilterLevel('LEVEL 4')}
                 className={`px-2.5 py-1 rounded-lg transition-all text-xs cursor-pointer ${
-                  filterLevel === 'LEVEL 4' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-500 hover:text-emerald-500'
+                  filterLevel === 'LEVEL 4' ? 'bg-blue-600 text-white font-bold' : 'text-slate-500 hover:text-blue-500'
                 }`}
               >
                 L4 ({stats.level4Count ?? 0})

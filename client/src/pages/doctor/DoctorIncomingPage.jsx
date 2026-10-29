@@ -16,6 +16,7 @@ import {
 import { TriageBadge } from '../../components/common/TriageBadge';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { SearchBar } from '../../components/common/SearchBar';
+import { SelectInput } from '../../components/common/SelectInput';
 import { PatientDetailModal } from '../../components/doctor/PatientDetailModal';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -146,18 +147,19 @@ export const DoctorIncomingPage = () => {
             <span>{doctorDeptName}</span>
           </div>
 
-          <select
+          <SelectInput
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="w-full sm:w-auto rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-clinical-500 font-medium"
-          >
-            <option value="ALL">All Urgency Levels</option>
-            <option value="LEVEL 1">Immediate (Red)</option>
-            <option value="LEVEL 2">Emergent (Orange)</option>
-            <option value="LEVEL 3">Urgent (Yellow)</option>
-            <option value="LEVEL 4">Less Urgent (Green)</option>
-            <option value="LEVEL 5">Non-Urgent (Blue)</option>
-          </select>
+            className="w-full sm:w-48"
+            options={[
+              { value: 'ALL', label: 'All Urgency Levels' },
+              { value: 'LEVEL 1', label: 'Immediate (Red)' },
+              { value: 'LEVEL 2', label: 'Emergent (Orange)' },
+              { value: 'LEVEL 3', label: 'Urgent (Yellow)' },
+              { value: 'LEVEL 4', label: 'Less Urgent (Blue)' },
+              { value: 'LEVEL 5', label: 'Non-Urgent (Blue)' }
+            ]}
+          />
         </div>
       </div>
 
@@ -168,7 +170,7 @@ export const DoctorIncomingPage = () => {
             <thead className="bg-slate-50/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="py-3 px-4">Priority #</th>
-                <th className="py-3 px-4">Patient Name & ID</th>
+                <th className="py-3 px-4">Patient Name</th>
                 <th className="py-3 px-4">Age / Sex</th>
                 <th className="py-3 px-4">Triage Urgency</th>
                 <th className="py-3 px-4">Wait Time</th>
@@ -227,7 +229,7 @@ export const DoctorIncomingPage = () => {
                           <button
                             onClick={() => callPatient(item.id, currentUser?.name)}
                             title="Call patient"
-                            className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
+                            className="p-1.5 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 rounded-lg border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer"
                           >
                             <BellRing size={13} />
                           </button>

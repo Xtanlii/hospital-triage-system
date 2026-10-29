@@ -49,8 +49,8 @@ export const NurseOverridePanel = ({
       level: 'Less Urgent',
       title: 'Less Urgent',
       desc: 'Mild stable distress. Simple diagnostic/treatment needed.',
-      colorClass: 'border-emerald-400 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200',
-      activeClass: 'ring-2 ring-emerald-600 border-emerald-600 bg-emerald-100/80 dark:bg-emerald-900/60 font-bold'
+      colorClass: 'border-blue-400 bg-blue-50 text-blue-900 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-200',
+      activeClass: 'ring-2 ring-blue-600 border-blue-600 bg-blue-100/80 dark:bg-blue-900/60 font-bold'
     },
     {
       level: 'Non-urgent',
@@ -135,13 +135,13 @@ export const NurseOverridePanel = ({
 
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              Override Reason <span className="text-rose-500">*</span>
+              Override Reason <span className="text-slate-400 font-normal">(Optional)</span>
             </label>
             <textarea
               rows={2}
               value={overrideReason}
               onChange={(e) => onChangeOverrideReason(e.target.value)}
-              placeholder="e.g. Patient condition reassessed after vital signs. High-risk sickle cell history with low baseline SpO2..."
+              placeholder="e.g. Patient condition reassessed after vital signs. High-risk sickle cell history with low baseline SpO2 (optional)..."
               className={`w-full rounded-xl border p-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 bg-white dark:bg-slate-900 ${
                 overrideError 
                   ? 'border-rose-400 focus:ring-rose-500/20' 

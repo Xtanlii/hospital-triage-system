@@ -20,8 +20,8 @@ export const LoginPage = () => {
   const { showToast, refreshAllData } = useApp();
   const { isDarkMode, toggleDarkMode } = useTheme();
 
-  const [username, setUsername] = useState('nurse.sarah');
-  const [password, setPassword] = useState('password123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +68,7 @@ export const LoginPage = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Hospital Branding */}
         <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-2xl bg-clinical-600 flex items-center justify-center text-white shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-clinical-600 dark:bg-gradient-to-br dark:from-emerald-500 dark:to-emerald-700 flex items-center justify-center text-white shadow-md dark:shadow-[0_0_20px_rgba(16,185,129,0.35)]">
             <HeartPulse size={28} className="stroke-[2.2]" />
           </div>
         </div>
@@ -84,7 +84,7 @@ export const LoginPage = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow-xl shadow-slate-200/50 dark:shadow-none rounded-2xl sm:px-10 border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow-xl shadow-slate-200/50 dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_20px_rgba(16,185,129,0.08)] rounded-2xl sm:px-10 border border-slate-200 dark:border-slate-800">
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs font-medium text-rose-700 dark:text-rose-300">
               {error}
@@ -160,7 +160,7 @@ export const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-clinical-600 py-2.5 px-4 text-xs font-bold text-white shadow-md hover:bg-clinical-700 active:scale-98 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-clinical-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 py-2.5 px-4 text-xs font-bold text-white shadow-md dark:shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:bg-clinical-700 active:scale-98 transition-all cursor-pointer"
             >
               {isLoading ? (
                 <span>Verifying credentials...</span>
@@ -172,27 +172,6 @@ export const LoginPage = () => {
               )}
             </button>
           </form>
-
-          {/* Seeded Credentials Reference */}
-          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-              Seeded Clinical Credentials
-            </p>
-            <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700/60 font-mono">
-              <div className="flex justify-between items-center">
-                <span><strong className="text-slate-700 dark:text-slate-300">Nurse:</strong> nurse.sarah</span>
-                <span className="text-slate-400">password123</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span><strong className="text-slate-700 dark:text-slate-300">Doctor:</strong> doctor.wilson</span>
-                <span className="text-slate-400">password123</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span><strong className="text-slate-700 dark:text-slate-300">Admin:</strong> admin</span>
-                <span className="text-slate-400">admin123</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Clinical System Compliance Notice */}
